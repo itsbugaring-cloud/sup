@@ -129,6 +129,7 @@ class MinIOService:
         original_filename: str,
         supplier_id: str,
         document_type: str,
+        tenant_id: str,
     ) -> tuple[str, str, str, str]:
         """
         Upload a supplier document to MinIO.
@@ -136,7 +137,7 @@ class MinIOService:
         Steps:
           1. Validate file (magic bytes + size).
           2. Generate a UUID-based stored filename.
-          3. Upload to MinIO under `supplier-documents/{supplier_id}/{doc_type}/{uuid}.ext`.
+          3. Upload to MinIO under `{tenant_id}/{supplier_id}/{document_type}/{uuid}.ext`.
           4. Return storage metadata.
 
         Returns:
@@ -154,7 +155,7 @@ class MinIOService:
             ext = ".jpg"  # Normalise JPEG extension
 
         stored_name = f"{uuid.uuid4().hex}{ext}"
-        object_key = f"{supplier_id}/{document_type}/{stored_name}"
+        object_key = f"{tenant_id}/{supplier_id}/{document_type}/{stored_name}"
 
         bucket = settings.minio.MINIO_BUCKET_DOCUMENTS
 
@@ -184,6 +185,7 @@ class MinIOService:
         self,
         file_content: bytes,
         filename: str,
+        tenant_id: str,
     ) -> str:
         """
         Upload a generated Excel export to the exports bucket.
@@ -192,7 +194,7 @@ class MinIOService:
             The MinIO object key (used to generate presigned download URL).
         """
         bucket = settings.minio.MINIO_BUCKET_EXPORTS
-        object_key = f"exports/{filename}"
+        object_key = f"{tenant_id}/exports/{filename}"
 
         self._client.put_object(
             bucket_name=bucket,

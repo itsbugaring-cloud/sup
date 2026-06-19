@@ -24,8 +24,8 @@ class BotConfigRepository(BaseRepository[BotConfig]):
     model = BotConfig
     DEFAULT_NAME = "default"
 
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
+    def __init__(self, session: AsyncSession, tenant_id: str | uuid.UUID | None = None) -> None:
+        super().__init__(session, tenant_id)
 
     async def get_default(self) -> BotConfig:
         """
@@ -33,6 +33,7 @@ class BotConfigRepository(BaseRepository[BotConfig]):
         If somehow missing, recreate it (idempotent).
         """
         stmt = select(BotConfig).where(BotConfig.config_name == self.DEFAULT_NAME)
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         config = result.scalar_one_or_none()
 
