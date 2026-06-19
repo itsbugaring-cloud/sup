@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     build-essential \
     curl \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install wheel
@@ -49,6 +50,7 @@ RUN groupadd --gid 1001 appgroup \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed Python packages from builder stage
