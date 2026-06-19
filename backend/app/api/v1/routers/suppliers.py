@@ -220,7 +220,8 @@ async def update_status(
 @router.delete(
     "/{supplier_id}",
     summary="Soft-delete a supplier (admin only)",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessResponse[None],
 )
 async def delete_supplier(
     supplier_id: uuid.UUID,
@@ -238,6 +239,7 @@ async def delete_supplier(
         request_id=get_request_id(request),
         ip_address=get_client_ip(request),
     )
+    return SuccessResponse(data=None, message="Supplier deleted successfully")
 
 
 # ── POST /suppliers/{id}/restore ──────────────────────────────────────────────
