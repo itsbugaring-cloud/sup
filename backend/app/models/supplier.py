@@ -100,9 +100,9 @@ class Supplier(TimestampMixin, SoftDeleteMixin, UUIDPrimaryKeyMixin, TenantMixin
         comment="Supplier category / type of goods or services",
     )
     status: Mapped[SupplierStatus] = mapped_column(
-        Enum(SupplierStatus, name="supplier_status", create_type=False),
+        Enum(SupplierStatus, name="supplier_status", values_callable=lambda x: [e.value for e in x]),
         nullable=False,
-        server_default=SupplierStatus.PENDING_REVIEW.value,
+        server_default="pending_review",
         index=True,
         comment="Current operational status",
     )
