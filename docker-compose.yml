@@ -171,7 +171,7 @@ services:
     volumes:
       - static_files:/app/staticfiles
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8000:8000"
     networks:
       crm_internal:
         ipv4_address: 172.20.0.20
