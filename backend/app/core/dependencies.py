@@ -29,8 +29,10 @@ from app.core.database import get_db_session
 from app.core.logging import get_logger
 from app.core.security import decode_token
 from app.repositories.audit_log_repository import AuditLogRepository
+from app.repositories.bot_config_repository import BotConfigRepository
 from app.repositories.supplier_document_repository import SupplierDocumentRepository
 from app.repositories.supplier_repository import SupplierRepository
+from app.repositories.tenant_repository import TenantRepository, UserRepository
 from app.schemas.auth import CurrentUserRead
 
 logger = get_logger(__name__)
@@ -74,8 +76,15 @@ async def get_current_user(
             detail="Invalid token type — access token required",
         )
 
+    if not payload.get("tenant_id"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token — missing tenant association",
+        )
+
     return CurrentUserRead(
         id=payload["sub"],
+        tenant_id=payload["tenant_id"],
         email=payload.get("email", payload["sub"]),
         display_name=payload.get("display_name", ""),
         role=payload.get("role", "viewer"),
@@ -100,22 +109,37 @@ DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 
 
 # ── Repository Dependencies ───────────────────────────────────────────────────
-def get_supplier_repo(db: DbSession) -> SupplierRepository:
-    return SupplierRepository(db)
+def get_tenant_repo(db: DbSession) -> TenantRepository:
+    return TenantRepository(db)
 
 
-def get_audit_repo(db: DbSession) -> AuditLogRepository:
-    return AuditLogRepository(db)
+def get_user_repo(db: DbSession) -> UserRepository:
+    return UserRepository(db)
 
 
-def get_doc_repo(db: DbSession) -> SupplierDocumentRepository:
-    return SupplierDocumentRepository(db)
+def get_supplier_repo(db: DbSession, user: CurrentUserRead = Depends(get_current_user)) -> SupplierRepository:
+    return SupplierRepository(db, tenant_id=user.tenant_id)
+
+
+def get_audit_repo(db: DbSession, user: CurrentUserRead = Depends(get_current_user)) -> AuditLogRepository:
+    return AuditLogRepository(db, tenant_id=user.tenant_id)
+
+
+def get_doc_repo(db: DbSession, user: CurrentUserRead = Depends(get_current_user)) -> SupplierDocumentRepository:
+    return SupplierDocumentRepository(db, tenant_id=user.tenant_id)
+
+
+def get_bot_config_repo(db: DbSession, user: CurrentUserRead = Depends(get_current_user)) -> BotConfigRepository:
+    return BotConfigRepository(db, tenant_id=user.tenant_id)
 
 
 # ── Annotated shorthand types for router injection ────────────────────────────
+TenantRepo = Annotated[TenantRepository, Depends(get_tenant_repo)]
+UserRepo = Annotated[UserRepository, Depends(get_user_repo)]
 SupplierRepo = Annotated[SupplierRepository, Depends(get_supplier_repo)]
 AuditRepo = Annotated[AuditLogRepository, Depends(get_audit_repo)]
 DocRepo = Annotated[SupplierDocumentRepository, Depends(get_doc_repo)]
+BotConfigRepo = Annotated[BotConfigRepository, Depends(get_bot_config_repo)]
 CurrentUser = Annotated[CurrentUserRead, Depends(get_current_user)]
 AdminUser = Annotated[CurrentUserRead, Depends(get_current_admin)]
 

@@ -33,8 +33,15 @@ class BaseRepository(ABC, Generic[ModelT]):
 
     model: type[ModelT]  # Must be set by subclass
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, tenant_id: str | uuid.UUID | None = None) -> None:
         self._session = session
+        self.tenant_id = str(tenant_id) if tenant_id else None
+
+    def _apply_tenant_filter(self, stmt: Select) -> Select:
+        """Automatically append tenant isolation filter if applicable."""
+        if self.tenant_id and hasattr(self.model, "tenant_id"):
+            return stmt.where(self.model.tenant_id == self.tenant_id)
+        return stmt
 
     # ── Create ────────────────────────────────────────────────────────────────
 
@@ -48,6 +55,9 @@ class BaseRepository(ABC, Generic[ModelT]):
         Returns:
             The newly created and refreshed ORM instance.
         """
+        if self.tenant_id and hasattr(self.model, "tenant_id") and "tenant_id" not in kwargs:
+            kwargs["tenant_id"] = self.tenant_id
+            
         instance = self.model(**kwargs)
         self._session.add(instance)
         await self._session.flush()     # Get DB-generated values (id, created_at)
@@ -59,12 +69,14 @@ class BaseRepository(ABC, Generic[ModelT]):
     async def get_by_id(self, record_id: uuid.UUID) -> ModelT | None:
         """Fetch a single record by primary key UUID."""
         stmt = select(self.model).where(self.model.id == record_id)
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_all(self, limit: int = 100, offset: int = 0) -> list[ModelT]:
         """Fetch all records with pagination. Does NOT filter deleted."""
         stmt = select(self.model).limit(limit).offset(offset)
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
@@ -102,7 +114,10 @@ class BaseRepository(ABC, Generic[ModelT]):
         """Count records matching an optional statement."""
         if stmt is None:
             count_stmt = select(func.count()).select_from(self.model)
+            count_stmt = self._apply_tenant_filter(count_stmt)
         else:
+            # We assume the passed statement already has the tenant filter applied 
+            # if it was constructed by the concrete repository using _apply_tenant_filter
             count_stmt = select(func.count()).select_from(stmt.subquery())
         result = await self._session.execute(count_stmt)
         return result.scalar_one()

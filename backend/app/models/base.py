@@ -89,3 +89,18 @@ class SoftDeleteMixin:
     def is_deleted(self) -> bool:
         """Convenience property to check soft-delete status."""
         return self.deleted_at is not None
+
+
+class TenantMixin:
+    """
+    Adds a `tenant_id` foreign key column to logically separate SaaS data.
+    
+    All multi-tenant models MUST inherit this mixin.
+    """
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=False,
+        index=True,
+        comment="ID of the Tenant this record belongs to",
+    )

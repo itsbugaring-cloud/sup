@@ -18,7 +18,7 @@ from sqlalchemy import BigInteger, Boolean, DateTime, Enum, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin, TenantMixin
 
 if TYPE_CHECKING:
     from app.models.supplier_document import SupplierDocument
@@ -38,7 +38,7 @@ class SupplierStatus(str, enum.Enum):
     BLACKLISTED = "blacklisted"
 
 
-class Supplier(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class Supplier(TimestampMixin, SoftDeleteMixin, UUIDPrimaryKeyMixin, TenantMixin, Base):
     """
     Core supplier entity.
 

@@ -17,7 +17,7 @@ from sqlalchemy import DateTime, Enum, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base
+from app.models.base import Base, TenantMixin
 
 
 class AuditAction(str, enum.Enum):
@@ -45,7 +45,7 @@ class AuditActorType(str, enum.Enum):
     SYSTEM = "system"
 
 
-class AuditLog(Base):
+class AuditLog(TenantMixin, Base):
     """
     Immutable audit trail record.
 

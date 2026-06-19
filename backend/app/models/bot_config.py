@@ -16,15 +16,14 @@ from sqlalchemy import Boolean, DateTime, String, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin, TenantMixin
 
 
-class BotConfig(TimestampMixin, Base):
+class BotConfig(TimestampMixin, TenantMixin, Base):
     """
     Telegram bot configuration entity.
 
     Table: bot_configs
-    Single row per deployment (config_name='default').
     Token stored encrypted — decrypted only in memory by the service layer.
     """
 

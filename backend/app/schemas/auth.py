@@ -37,6 +37,7 @@ class CurrentUserRead(CRMBaseModel):
     """Authenticated user context embedded in API responses."""
 
     id: str
+    tenant_id: str
     email: str
     display_name: str
     role: str

@@ -13,11 +13,7 @@ Endpoints:
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.database import get_db_session
-from app.core.dependencies import AdminUser
-from app.repositories.bot_config_repository import BotConfigRepository
+from app.core.dependencies import AdminUser, BotConfigRepo
 from app.schemas.bot_config import (
     BotConfigRead,
     BotConfigUpdate,
@@ -30,8 +26,8 @@ from app.services.bot_config_service import BotConfigService
 router = APIRouter(prefix="/bot-config", tags=["bot-config"])
 
 
-def _get_service(db: AsyncSession = Depends(get_db_session)) -> BotConfigService:
-    return BotConfigService(repo=BotConfigRepository(db))
+def _get_service(repo: BotConfigRepo) -> BotConfigService:
+    return BotConfigService(repo=repo)
 
 
 # ── GET /bot-config ───────────────────────────────────────────────────────────

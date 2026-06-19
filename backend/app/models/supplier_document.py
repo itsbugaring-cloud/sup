@@ -17,7 +17,7 @@ from sqlalchemy import BigInteger, Boolean, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin, TenantMixin
 
 if TYPE_CHECKING:
     from app.models.supplier import Supplier
@@ -37,7 +37,7 @@ class DocumentType(str, enum.Enum):
     OTHER = "other"
 
 
-class SupplierDocument(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class SupplierDocument(TimestampMixin, SoftDeleteMixin, UUIDPrimaryKeyMixin, TenantMixin, Base):
     """
     Documents (NPWP, photos, contracts) linked to suppliers.
 
