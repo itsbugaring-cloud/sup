@@ -15,9 +15,9 @@ asyncpg==0.29.0                  # Async PostgreSQL driver
 alembic==1.13.2
 
 # ── Redis & Caching ───────────────────────────────────────────────────────────
-redis[hiredis]==5.0.7
+redis[hiredis]>=4.5.5,<6.0.0
 arq==0.26.1                      # Async job queue backed by Redis
-fastapi-cache2[redis]==0.2.1     # API response caching
+fastapi-cache2[redis]>=0.2.1     # API response caching
 
 # ── Telegram Bot ──────────────────────────────────────────────────────────────
 aiogram==3.10.0
