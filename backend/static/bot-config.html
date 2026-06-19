@@ -5,55 +5,196 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supplier CRM - Bot Configuration</title>
     
-    <!-- React & ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <!-- Babel -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
                     colors: {
-                        primary: '#1E3A5F',
-                        secondary: '#F0F4F8'
+                        primary: {
+                            50: '#f0f4f8',
+                            100: '#dbe3ed',
+                            500: '#1E3A5F',
+                            600: '#152b47',
+                            700: '#0d1d30',
+                        }
                     }
                 }
             }
         }
     </script>
+    
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
     <!-- Navbar -->
-    <nav class="bg-primary text-white shadow-md">
+    <nav class="bg-primary-500 text-white shadow-lg sticky top-0 z-40 border-b border-primary-600">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <span class="font-bold text-xl tracking-wide">CRM Supplier</span>
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-                        <a href="/bot-config.html" class="bg-white/10 text-white px-3 py-2 rounded-md text-sm font-medium">Bot Config</a>
+                <div class="flex items-center space-x-8">
+                    <span class="font-bold text-xl tracking-wide flex items-center gap-2.5">
+                        <i data-lucide="building-2" class="h-6 w-6 text-blue-300"></i> CRM Supplier
+                    </span>
+                    <div class="hidden sm:flex space-x-3">
+                        <a href="/" class="text-blue-100 hover:text-white hover:bg-white/5 px-3.5 py-2 rounded-xl text-sm font-medium tracking-wide transition-all">Dashboard</a>
+                        <a href="/bot-config.html" class="bg-white/10 text-white px-3.5 py-2 rounded-xl text-sm font-semibold tracking-wide shadow-inner">Bot Config</a>
                     </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="user-display-name" class="text-sm font-medium text-blue-100 hidden md:block bg-primary-600 px-3 py-1.5 rounded-xl border border-primary-700"></span>
+                    <button onclick="handleLogout()" class="text-sm font-semibold bg-red-600/90 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-all shadow-md active:scale-95">
+                        Logout
+                    </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div id="root" class="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8"></div>
-
-    <script type="text/babel">
-        // Placeholder auth token - in a real app, this would come from a login flow
-        const MOCK_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI... mock"; // Real app needs real login
+    <!-- Main Container -->
+    <main class="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        // Auth interceptor setup
+        <!-- Header -->
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Telegram Bot Configuration</h1>
+            <p class="text-sm text-slate-500 mt-1">Configure your bot credentials, webhook routing, and automatic notifications.</p>
+        </div>
+
+        <!-- Configuration Card -->
+        <div class="glass-card rounded-2xl overflow-hidden shadow-sm p-6 sm:p-8 space-y-6">
+            
+            <!-- Global Info Panel (Dynamically shown if token is active) -->
+            <div id="bot-identity-panel" class="hidden bg-blue-50 border border-blue-100 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h3 id="bot-username-title" class="text-sm font-bold text-blue-800">Bot Active: @-</h3>
+                    <p id="bot-hint-desc" class="text-xs text-blue-600 mt-0.5">Token: ending in -</p>
+                </div>
+                <div class="flex flex-wrap gap-2.5">
+                    <button 
+                        id="test-btn"
+                        onclick="sendTestMessage()"
+                        class="px-4 py-2 text-xs font-semibold rounded-xl text-blue-700 bg-blue-100 hover:bg-blue-200 active:scale-95 transition-all shadow-sm"
+                    >
+                        Send Test Message
+                    </button>
+                    <button 
+                        id="webhook-btn"
+                        onclick="registerWebhook()"
+                        class="px-4 py-2 text-xs font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+                    >
+                        Register Webhook
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="config-form" onsubmit="saveConfiguration(event)" class="space-y-6">
+                <!-- Bot Token -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700">Bot Token (from @BotFather)</label>
+                    <input 
+                        type="password" 
+                        id="bot-token"
+                        placeholder="1234567890:AAH..."
+                        class="mt-1.5 block w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary-500 sm:text-sm bg-white"
+                    />
+                    <p id="token-placeholder-note" class="hidden text-xs text-slate-400 mt-1.5">Leave blank to keep the currently active token.</p>
+                </div>
+
+                <!-- Webhook URL -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700">Webhook URL</label>
+                    <div class="mt-1.5 relative rounded-md shadow-sm">
+                        <input 
+                            type="url" 
+                            id="webhook-url"
+                            placeholder="https://api.yourdomain.com/webhook"
+                            class="block w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary-500 sm:text-sm bg-white"
+                        />
+                    </div>
+                    <p id="webhook-status" class="mt-2 text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                        Webhook Status: <span id="webhook-badge" class="font-bold">-</span>
+                    </p>
+                </div>
+
+                <!-- Target Chat IDs -->
+                <div>
+                    <div class="flex justify-between items-baseline">
+                        <label class="block text-sm font-semibold text-slate-700">Target Chat IDs</label>
+                        <span class="text-xs text-slate-400">One target per line</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5 mb-2">Format: <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">-100123456789: Ops Team</code></p>
+                    <textarea 
+                        id="chat-ids-text"
+                        rows="4"
+                        placeholder="-100123456789: Alert Group&#10;987654321: Admin Personal"
+                        class="block w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary-500 sm:text-sm font-mono bg-white"
+                    ></textarea>
+                </div>
+
+                <!-- Notifications Toggle -->
+                <div class="flex items-center space-x-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <input 
+                        id="notifications-enabled" 
+                        type="checkbox" 
+                        class="h-4.5 w-4.5 text-primary-500 focus:ring-primary-500 border-slate-300 rounded-lg cursor-pointer"
+                    />
+                    <label htmlFor="notifications-enabled" class="text-sm font-semibold text-slate-800 cursor-pointer select-none">
+                        Enable Automated Notifications
+                    </label>
+                </div>
+
+                <!-- Actions Footer -->
+                <div class="pt-5 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <button 
+                        type="submit" 
+                        id="save-btn"
+                        class="w-full sm:w-auto flex justify-center py-3 px-6 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-500 hover:bg-primary-600 active:scale-95 focus:outline-none transition-all"
+                    >
+                        Save Configuration
+                    </button>
+                    <div id="loading-spinner" class="hidden flex items-center space-x-2 text-slate-400 text-sm font-semibold">
+                        <svg class="animate-spin h-5 w-5 text-primary-500" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Syncing...</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Script Logic -->
+    <script>
+        const API_URL = '/api/v1';
+        
         axios.interceptors.request.use(config => {
             const token = localStorage.getItem('token');
-            if (token) config.headers.Authorization = `Bearer ${token}`;
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
             return config;
         });
 
@@ -61,254 +202,235 @@
             response => response,
             error => {
                 if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('token');
                     window.location.href = '/login.html';
                 }
                 return Promise.reject(error);
             }
         );
 
-        function App() {
-            const [config, setConfig] = React.useState(null);
-            const [loading, setLoading] = React.useState(true);
-            const [saving, setSaving] = React.useState(false);
-            const [testing, setTesting] = React.useState(false);
-            const [error, setError] = React.useState('');
-            const [success, setSuccess] = React.useState('');
-            const [testResult, setTestResult] = React.useState(null);
+        let botConfig = null;
 
-            // Form state
-            const [formData, setFormData] = React.useState({
-                bot_token: '',
-                webhook_url: '',
-                chat_ids_text: '',
-                notifications_enabled: true
-            });
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
 
-            React.useEffect(() => {
-                // For development bypass token - in reality we need a login page.
-                // We'll skip token check here assuming the API allows it or we logged in.
-                fetchConfig();
-            }, []);
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                document.getElementById('user-display-name').innerText = `Workspace: ${payload.display_name || payload.email}`;
+            } catch (e) {
+                console.error("JWT parse error", e);
+            }
 
-            const fetchConfig = async () => {
-                try {
-                    setLoading(true);
-                    const res = await axios.get('/api/v1/bot-config');
-                    const data = res.data.data;
-                    setConfig(data);
-                    
-                    // Format chat IDs back to text for easy editing
-                    const chatText = (data.chat_ids || []).map(c => `${c.chat_id}:${c.label}`).join('\n');
-                    
-                    setFormData({
-                        bot_token: '', // Never populate token back to input
-                        webhook_url: data.webhook_url || '',
-                        chat_ids_text: chatText,
-                        notifications_enabled: data.notifications_enabled
-                    });
-                } catch (err) {
-                    setError('Failed to load bot config. Ensure you are logged in as admin.');
-                    console.error(err);
-                } finally {
-                    setLoading(false);
-                }
-            };
+            lucide.createIcons();
+            fetchConfig();
+        });
 
-            const handleSave = async (e) => {
-                e.preventDefault();
-                setSaving(true);
-                setError('');
-                setSuccess('');
-                setTestResult(null);
-
-                try {
-                    // Parse chat IDs text area
-                    const chat_ids = formData.chat_ids_text
-                        .split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line)
-                        .map(line => {
-                            const parts = line.split(':');
-                            return {
-                                chat_id: parts[0].trim(),
-                                label: parts[1] ? parts[1].trim() : 'Default'
-                            };
-                        });
-
-                    const payload = {
-                        webhook_url: formData.webhook_url || null,
-                        chat_ids: chat_ids,
-                        notifications_enabled: formData.notifications_enabled
-                    };
-
-                    if (formData.bot_token.trim()) {
-                        payload.bot_token = formData.bot_token.trim();
-                    }
-
-                    const res = await axios.put('/api/v1/bot-config', payload);
-                    setSuccess('Configuration saved successfully!');
-                    setConfig(res.data.data);
-                    setFormData(prev => ({...prev, bot_token: ''})); // clear token input
-                } catch (err) {
-                    setError(err.response?.data?.message || 'Failed to save configuration');
-                } finally {
-                    setSaving(false);
-                }
-            };
-
-            const handleTest = async () => {
-                setTesting(true);
-                setTestResult(null);
-                try {
-                    const res = await axios.post('/api/v1/bot-config/test', {});
-                    setTestResult(res.data.data);
-                } catch (err) {
-                    setError('Test failed: ' + (err.response?.data?.message || err.message));
-                } finally {
-                    setTesting(false);
-                }
-            };
-            
-            const handleRegisterWebhook = async () => {
-                setTesting(true);
-                setTestResult(null);
-                try {
-                    const res = await axios.post('/api/v1/bot-config/webhook', {});
-                    setSuccess(res.data.message);
-                    fetchConfig(); // Reload to get webhook_is_set status
-                } catch (err) {
-                    setError('Webhook registration failed: ' + (err.response?.data?.message || err.message));
-                } finally {
-                    setTesting(false);
-                }
-            };
-
-            if (loading) return <div className="text-center py-12 text-gray-500">Loading configuration...</div>;
-
-            return (
-                <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
-                        <h2 className="text-lg font-medium text-gray-900">Telegram Bot Configuration</h2>
-                        <p className="mt-1 text-sm text-gray-500">Configure your bot token, webhook, and notification targets.</p>
-                    </div>
-
-                    <div className="px-6 py-6">
-                        {error && (
-                            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-                                <span className="block sm:inline">{error}</span>
-                            </div>
-                        )}
-                        {success && (
-                            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
-                                <span className="block sm:inline">{success}</span>
-                            </div>
-                        )}
-
-                        <form onSubmit={handleSave} className="space-y-6">
-                            
-                            {/* Bot Identity Panel */}
-                            {config?.has_token && (
-                                <div className="bg-blue-50 border border-blue-100 rounded-md p-4 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-sm font-medium text-blue-800">Bot Configured: @{config.bot_username}</h3>
-                                        <p className="text-xs text-blue-600 mt-1">Token ending in {config.bot_token_hint}</p>
-                                    </div>
-                                    <div className="flex space-x-2">
-                                        <button 
-                                            type="button" 
-                                            onClick={handleTest}
-                                            disabled={testing}
-                                            className="px-3 py-1.5 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 disabled:opacity-50"
-                                        >
-                                            {testing ? 'Testing...' : 'Send Test Message'}
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={handleRegisterWebhook}
-                                            disabled={testing || !formData.webhook_url}
-                                            className="px-3 py-1.5 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                                        >
-                                            Set Webhook
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {testResult && (
-                                <div className={`p-4 rounded-md text-sm ${testResult.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-                                    <p className="font-medium">{testResult.message}</p>
-                                    {testResult.bot_username && <p className="mt-1 text-xs">Bot: @{testResult.bot_username}</p>}
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Bot Token (from @BotFather)</label>
-                                <input 
-                                    type="password" 
-                                    value={formData.bot_token}
-                                    onChange={e => setFormData({...formData, bot_token: e.target.value})}
-                                    placeholder={config?.has_token ? "Leave blank to keep existing token" : "1234567890:AAH..."}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Webhook URL</label>
-                                <div className="mt-1 flex rounded-md shadow-sm">
-                                    <input 
-                                        type="url" 
-                                        value={formData.webhook_url}
-                                        onChange={e => setFormData({...formData, webhook_url: e.target.value})}
-                                        placeholder="https://api.yourdomain.com/webhook"
-                                        className="flex-1 block w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
-                                    />
-                                </div>
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Status: {config?.webhook_is_set ? <span className="text-green-600 font-medium">Registered ✓</span> : <span className="text-red-500 font-medium">Not Registered</span>}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Target Chat IDs</label>
-                                <p className="text-xs text-gray-500 mb-2">One per line. Format: <code className="bg-gray-100 px-1 py-0.5 rounded">-100123456789 : Ops Team</code></p>
-                                <textarea 
-                                    rows="4"
-                                    value={formData.chat_ids_text}
-                                    onChange={e => setFormData({...formData, chat_ids_text: e.target.value})}
-                                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm font-mono"
-                                ></textarea>
-                            </div>
-
-                            <div className="flex items-center">
-                                <input 
-                                    id="notifications_enabled" 
-                                    type="checkbox" 
-                                    checked={formData.notifications_enabled}
-                                    onChange={e => setFormData({...formData, notifications_enabled: e.target.checked})}
-                                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                                />
-                                <label htmlFor="notifications_enabled" className="ml-2 block text-sm text-gray-900">
-                                    Enable Notifications
-                                </label>
-                            </div>
-
-                            <div className="pt-4 border-t border-gray-200">
-                                <button 
-                                    type="submit" 
-                                    disabled={saving}
-                                    className="w-full sm:w-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
-                                >
-                                    {saving ? 'Saving...' : 'Save Configuration'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            );
+        async function fetchConfig() {
+            setLoading(true);
+            try {
+                const res = await axios.get(`${API_URL}/bot-config`);
+                botConfig = res.data.data;
+                populateForm(botConfig);
+            } catch (err) {
+                console.error("Failed to fetch bot config", err);
+                showToast("Failed to load bot configuration.", "error");
+            } finally {
+                setLoading(false);
+            }
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        function setLoading(isLoading) {
+            const spinner = document.getElementById('loading-spinner');
+            const saveBtn = document.getElementById('save-btn');
+            
+            if (isLoading) {
+                spinner.classList.remove('hidden');
+                saveBtn.disabled = true;
+            } else {
+                spinner.classList.add('hidden');
+                saveBtn.disabled = false;
+            }
+        }
+
+        function populateForm(data) {
+            if (!data) return;
+
+            // Populate bot panel if active bot exists
+            const panel = document.getElementById('bot-identity-panel');
+            const title = document.getElementById('bot-username-title');
+            const hint = document.getElementById('bot-hint-desc');
+            const placeholderNote = document.getElementById('token-placeholder-note');
+            const tokenInput = document.getElementById('bot-token');
+
+            if (data.has_token) {
+                panel.classList.remove('hidden');
+                title.innerText = `Bot Active: @${data.bot_username || 'Unknown'}`;
+                hint.innerText = `Token: ending in ${data.bot_token_hint}`;
+                placeholderNote.classList.remove('hidden');
+                tokenInput.placeholder = "Leave blank to keep existing token";
+            } else {
+                panel.classList.add('hidden');
+                placeholderNote.classList.add('hidden');
+                tokenInput.placeholder = "1234567890:AAH...";
+            }
+
+            // Populate webhook
+            document.getElementById('webhook-url').value = data.webhook_url || '';
+            
+            // Populate webhook status badge
+            const badge = document.getElementById('webhook-badge');
+            if (data.webhook_is_set) {
+                badge.innerText = "Registered ✓";
+                badge.className = "text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg";
+            } else {
+                badge.innerText = "Not Registered";
+                badge.className = "text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg";
+            }
+
+            // Populate Target Chat IDs text area
+            const chatText = (data.chat_ids || []).map(c => `${c.chat_id}:${c.label}`).join('\n');
+            document.getElementById('chat-ids-text').value = chatText;
+
+            // Populate checkbox
+            document.getElementById('notifications-enabled').checked = data.notifications_enabled;
+        }
+
+        async function saveConfiguration(e) {
+            e.preventDefault();
+            setLoading(true);
+
+            try {
+                // Parse Chat IDs text
+                const chatIdsText = document.getElementById('chat-ids-text').value;
+                const chat_ids = chatIdsText
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line)
+                    .map(line => {
+                        const parts = line.split(':');
+                        return {
+                            chat_id: parts[0].trim(),
+                            label: parts[1] ? parts[1].trim() : 'Default'
+                        };
+                    });
+
+                const botToken = document.getElementById('bot-token').value.trim();
+                const webhookUrl = document.getElementById('webhook-url').value.trim();
+                const notificationsEnabled = document.getElementById('notifications-enabled').checked;
+
+                const payload = {
+                    webhook_url: webhookUrl || null,
+                    chat_ids: chat_ids,
+                    notifications_enabled: notificationsEnabled
+                };
+
+                if (botToken) {
+                    payload.bot_token = botToken;
+                }
+
+                const res = await axios.put(`${API_URL}/bot-config`, payload);
+                botConfig = res.data.data;
+                
+                showToast("Configuration saved successfully!", "success");
+                
+                // Clear token input field after success saving
+                document.getElementById('bot-token').value = '';
+                
+                populateForm(botConfig);
+            } catch (err) {
+                console.error("Save config failed", err);
+                showToast(err.response?.data?.message || "Failed to save configuration.", "error");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function sendTestMessage() {
+            const btn = document.getElementById('test-btn');
+            btn.disabled = true;
+            btn.innerText = "Sending...";
+
+            try {
+                const res = await axios.post(`${API_URL}/bot-config/test`, {});
+                if (res.data.success) {
+                    showToast("Test message sent successfully!", "success");
+                } else {
+                    showToast(res.data.message || "Failed to send test message.", "error");
+                }
+            } catch (err) {
+                console.error("Test send failed", err);
+                showToast("Failed to run connection test.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send Test Message";
+            }
+        }
+
+        async function registerWebhook() {
+            const btn = document.getElementById('webhook-btn');
+            btn.disabled = true;
+            btn.innerText = "Registering...";
+
+            try {
+                const res = await axios.post(`${API_URL}/bot-config/webhook`, {});
+                showToast(res.data.message || "Webhook set successfully!", "success");
+                fetchConfig(); // Reload to update UI badges
+            } catch (err) {
+                console.error("Webhook registration failed", err);
+                showToast(err.response?.data?.message || "Failed to register webhook with Telegram.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Register Webhook";
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
+        function showToast(message, type = 'success') {
+            const existing = document.getElementById('floating-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'floating-toast';
+            
+            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600';
+            const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
+            
+            toast.className = `fixed bottom-5 right-5 z-50 flex items-center gap-3 text-white px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-10 opacity-0 ${bgColor} border border-white/10`;
+            toast.innerHTML = `
+                <i data-lucide="${iconName}" class="h-5 w-5"></i>
+                <span class="text-sm font-semibold">${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
     </script>
 </body>
 </html>

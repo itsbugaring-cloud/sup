@@ -179,8 +179,7 @@
                     display_name: document.getElementById('reg-name').value
                 });
                 localStorage.setItem('token', res.data.data.access_token);
-                alert("Registration successful! Welcome to your CRM dashboard.");
-                window.location.href = '/';
+                showSuccessModal("Registration successful! Welcome to your CRM dashboard.", '/');
             } catch (err) {
                 showError(err.response?.data?.detail || 'Registration failed.');
             } finally {
@@ -188,6 +187,35 @@
                 registerBtn.textContent = 'Create SaaS Account';
             }
         });
+
+        function showSuccessModal(message, redirectUrl) {
+            document.getElementById('success-modal-message').textContent = message;
+            const modal = document.getElementById('success-modal');
+            modal.classList.remove('hidden');
+            
+            // Trigger checkmark bounce and lucide icon update
+            lucide.createIcons();
+
+            document.getElementById('success-modal-btn').onclick = () => {
+                window.location.href = redirectUrl;
+            };
+        }
     </script>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-950/70 backdrop-blur-md px-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100 transform transition-all duration-300">
+            <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-50 mb-6 border border-green-100">
+                <i data-lucide="check" class="h-10 w-10 text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">Workspace Created!</h3>
+            <p id="success-modal-message" class="text-sm text-gray-500 mt-3 leading-relaxed"></p>
+            <div class="mt-8">
+                <button id="success-modal-btn" class="w-full inline-flex justify-center py-3 px-5 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-green-600 hover:bg-green-700 active:scale-95 transition-all">
+                    Go to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
