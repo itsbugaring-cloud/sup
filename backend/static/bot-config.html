@@ -50,11 +50,22 @@
         // Placeholder auth token - in a real app, this would come from a login flow
         const MOCK_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI... mock"; // Real app needs real login
         
-        // Setup Axios Interceptor
+        // Auth interceptor setup
         axios.interceptors.request.use(config => {
-            config.headers.Authorization = `Bearer ${localStorage.getItem('token') || ''}`;
+            const token = localStorage.getItem('token');
+            if (token) config.headers.Authorization = `Bearer ${token}`;
             return config;
         });
+
+        axios.interceptors.response.use(
+            response => response,
+            error => {
+                if (error.response && error.response.status === 401) {
+                    window.location.href = '/login.html';
+                }
+                return Promise.reject(error);
+            }
+        );
 
         function App() {
             const [config, setConfig] = React.useState(null);
