@@ -1,0 +1,71 @@
+# ==============================================================================
+# .gitignore — Supplier CRM Project
+# ==============================================================================
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+*.pem
+*.key
+*.crt
+ssl/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Node.js / Frontend ────────────────────────────────────────────────────────
+node_modules/
+dist/
+.next/
+.nuxt/
+frontend/.env
+frontend/.env.local
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# (Keep docker-compose.yml and Dockerfiles, ignore generated artifacts)
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Database (local dev snapshots) ───────────────────────────────────────────
+*.sql.gz
+*.dump
+
+# ── MinIO local data (if mounted locally) ────────────────────────────────────
+minio_data/

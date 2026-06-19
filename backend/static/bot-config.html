@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier CRM - Bot Configuration</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A5F',
+                        secondary: '#F0F4F8'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-primary text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl tracking-wide">CRM Supplier</span>
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="/bot-config.html" class="bg-white/10 text-white px-3 py-2 rounded-md text-sm font-medium">Bot Config</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="root" class="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8"></div>
+
+    <script type="text/babel">
+        // Placeholder auth token - in a real app, this would come from a login flow
+        const MOCK_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI... mock"; // Real app needs real login
+        
+        // Setup Axios Interceptor
+        axios.interceptors.request.use(config => {
+            config.headers.Authorization = `Bearer ${localStorage.getItem('token') || ''}`;
+            return config;
+        });
+
+        function App() {
+            const [config, setConfig] = React.useState(null);
+            const [loading, setLoading] = React.useState(true);
+            const [saving, setSaving] = React.useState(false);
+            const [testing, setTesting] = React.useState(false);
+            const [error, setError] = React.useState('');
+            const [success, setSuccess] = React.useState('');
+            const [testResult, setTestResult] = React.useState(null);
+
+            // Form state
+            const [formData, setFormData] = React.useState({
+                bot_token: '',
+                webhook_url: '',
+                chat_ids_text: '',
+                notifications_enabled: true
+            });
+
+            React.useEffect(() => {
+                // For development bypass token - in reality we need a login page.
+                // We'll skip token check here assuming the API allows it or we logged in.
+                fetchConfig();
+            }, []);
+
+            const fetchConfig = async () => {
+                try {
+                    setLoading(true);
+                    const res = await axios.get('/api/v1/bot-config');
+                    const data = res.data.data;
+                    setConfig(data);
+                    
+                    // Format chat IDs back to text for easy editing
+                    const chatText = (data.chat_ids || []).map(c => `${c.chat_id}:${c.label}`).join('\n');
+                    
+                    setFormData({
+                        bot_token: '', // Never populate token back to input
+                        webhook_url: data.webhook_url || '',
+                        chat_ids_text: chatText,
+                        notifications_enabled: data.notifications_enabled
+                    });
+                } catch (err) {
+                    setError('Failed to load bot config. Ensure you are logged in as admin.');
+                    console.error(err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleSave = async (e) => {
+                e.preventDefault();
+                setSaving(true);
+                setError('');
+                setSuccess('');
+                setTestResult(null);
+
+                try {
+                    // Parse chat IDs text area
+                    const chat_ids = formData.chat_ids_text
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line)
+                        .map(line => {
+                            const parts = line.split(':');
+                            return {
+                                chat_id: parts[0].trim(),
+                                label: parts[1] ? parts[1].trim() : 'Default'
+                            };
+                        });
+
+                    const payload = {
+                        webhook_url: formData.webhook_url || null,
+                        chat_ids: chat_ids,
+                        notifications_enabled: formData.notifications_enabled
+                    };
+
+                    if (formData.bot_token.trim()) {
+                        payload.bot_token = formData.bot_token.trim();
+                    }
+
+                    const res = await axios.put('/api/v1/bot-config', payload);
+                    setSuccess('Configuration saved successfully!');
+                    setConfig(res.data.data);
+                    setFormData(prev => ({...prev, bot_token: ''})); // clear token input
+                } catch (err) {
+                    setError(err.response?.data?.message || 'Failed to save configuration');
+                } finally {
+                    setSaving(false);
+                }
+            };
+
+            const handleTest = async () => {
+                setTesting(true);
+                setTestResult(null);
+                try {
+                    const res = await axios.post('/api/v1/bot-config/test', {});
+                    setTestResult(res.data.data);
+                } catch (err) {
+                    setError('Test failed: ' + (err.response?.data?.message || err.message));
+                } finally {
+                    setTesting(false);
+                }
+            };
+            
+            const handleRegisterWebhook = async () => {
+                setTesting(true);
+                setTestResult(null);
+                try {
+                    const res = await axios.post('/api/v1/bot-config/webhook', {});
+                    setSuccess(res.data.message);
+                    fetchConfig(); // Reload to get webhook_is_set status
+                } catch (err) {
+                    setError('Webhook registration failed: ' + (err.response?.data?.message || err.message));
+                } finally {
+                    setTesting(false);
+                }
+            };
+
+            if (loading) return <div className="text-center py-12 text-gray-500">Loading configuration...</div>;
+
+            return (
+                <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
+                        <h2 className="text-lg font-medium text-gray-900">Telegram Bot Configuration</h2>
+                        <p className="mt-1 text-sm text-gray-500">Configure your bot token, webhook, and notification targets.</p>
+                    </div>
+
+                    <div className="px-6 py-6">
+                        {error && (
+                            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                                <span className="block sm:inline">{error}</span>
+                            </div>
+                        )}
+                        {success && (
+                            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
+                                <span className="block sm:inline">{success}</span>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSave} className="space-y-6">
+                            
+                            {/* Bot Identity Panel */}
+                            {config?.has_token && (
+                                <div className="bg-blue-50 border border-blue-100 rounded-md p-4 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-medium text-blue-800">Bot Configured: @{config.bot_username}</h3>
+                                        <p className="text-xs text-blue-600 mt-1">Token ending in {config.bot_token_hint}</p>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <button 
+                                            type="button" 
+                                            onClick={handleTest}
+                                            disabled={testing}
+                                            className="px-3 py-1.5 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 disabled:opacity-50"
+                                        >
+                                            {testing ? 'Testing...' : 'Send Test Message'}
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={handleRegisterWebhook}
+                                            disabled={testing || !formData.webhook_url}
+                                            className="px-3 py-1.5 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                                        >
+                                            Set Webhook
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {testResult && (
+                                <div className={`p-4 rounded-md text-sm ${testResult.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+                                    <p className="font-medium">{testResult.message}</p>
+                                    {testResult.bot_username && <p className="mt-1 text-xs">Bot: @{testResult.bot_username}</p>}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Bot Token (from @BotFather)</label>
+                                <input 
+                                    type="password" 
+                                    value={formData.bot_token}
+                                    onChange={e => setFormData({...formData, bot_token: e.target.value})}
+                                    placeholder={config?.has_token ? "Leave blank to keep existing token" : "1234567890:AAH..."}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Webhook URL</label>
+                                <div className="mt-1 flex rounded-md shadow-sm">
+                                    <input 
+                                        type="url" 
+                                        value={formData.webhook_url}
+                                        onChange={e => setFormData({...formData, webhook_url: e.target.value})}
+                                        placeholder="https://api.yourdomain.com/webhook"
+                                        className="flex-1 block w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:ring-primary sm:text-sm"
+                                    />
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Status: {config?.webhook_is_set ? <span className="text-green-600 font-medium">Registered ✓</span> : <span className="text-red-500 font-medium">Not Registered</span>}
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Target Chat IDs</label>
+                                <p className="text-xs text-gray-500 mb-2">One per line. Format: <code className="bg-gray-100 px-1 py-0.5 rounded">-100123456789 : Ops Team</code></p>
+                                <textarea 
+                                    rows="4"
+                                    value={formData.chat_ids_text}
+                                    onChange={e => setFormData({...formData, chat_ids_text: e.target.value})}
+                                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm font-mono"
+                                ></textarea>
+                            </div>
+
+                            <div className="flex items-center">
+                                <input 
+                                    id="notifications_enabled" 
+                                    type="checkbox" 
+                                    checked={formData.notifications_enabled}
+                                    onChange={e => setFormData({...formData, notifications_enabled: e.target.checked})}
+                                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                                />
+                                <label htmlFor="notifications_enabled" className="ml-2 block text-sm text-gray-900">
+                                    Enable Notifications
+                                </label>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-200">
+                                <button 
+                                    type="submit" 
+                                    disabled={saving}
+                                    className="w-full sm:w-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+                                >
+                                    {saving ? 'Saving...' : 'Save Configuration'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

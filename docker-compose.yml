@@ -1,0 +1,282 @@
+version: "3.9"
+
+# ==============================================================================
+# SUPPLIER CRM - PRODUCTION DOCKER COMPOSE
+# Architect: Principal Full-Stack / DevOps
+# Description: Orchestrates all services for the Supplier CRM platform.
+# ==============================================================================
+
+networks:
+  crm_internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  static_files:
+    driver: local
+
+services:
+  # ============================================================
+  # SERVICE: PostgreSQL 16
+  # ============================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: crm_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432" # Bind to localhost only — never expose to 0.0.0.0 in prod
+    networks:
+      crm_internal:
+        ipv4_address: 172.20.0.10
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # SERVICE: Redis 7 (FSM + Caching)
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: crm_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel warning
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      crm_internal:
+        ipv4_address: 172.20.0.11
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # SERVICE: MinIO (S3-compatible Object Storage)
+  # ============================================================
+  minio:
+    image: minio/minio:latest
+    container_name: crm_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_VOLUMES: "/data"
+      MINIO_SITE_NAME: "supplier-crm"
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:9000:9000"  # S3 API
+      - "127.0.0.1:9001:9001"  # Web Console
+    networks:
+      crm_internal:
+        ipv4_address: 172.20.0.12
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # SERVICE: MinIO Init (Creates default buckets on first run)
+  # ============================================================
+  minio_init:
+    image: minio/mc:latest
+    container_name: crm_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_DOCUMENTS: ${MINIO_BUCKET_DOCUMENTS}
+      MINIO_BUCKET_EXPORTS: ${MINIO_BUCKET_EXPORTS}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set crm http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+      mc mb --ignore-existing crm/$${MINIO_BUCKET_DOCUMENTS};
+      mc mb --ignore-existing crm/$${MINIO_BUCKET_EXPORTS};
+      mc anonymous set download crm/$${MINIO_BUCKET_EXPORTS};
+      echo 'MinIO buckets initialized.';
+      exit 0;
+      "
+    networks:
+      - crm_internal
+    restart: "no"
+
+  # ============================================================
+  # SERVICE: Backend (FastAPI + ARQ Worker)
+  # ============================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: crm_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Explicitly override service hostnames for Docker networking
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      MINIO_HOST: minio
+      MINIO_PORT: "9000"
+    volumes:
+      - static_files:/app/staticfiles
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      crm_internal:
+        ipv4_address: 172.20.0.20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ============================================================
+  # SERVICE: ARQ Background Worker
+  # ============================================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: crm_worker
+    restart: unless-stopped
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      MINIO_HOST: minio
+      MINIO_PORT: "9000"
+    networks:
+      crm_internal:
+        ipv4_address: 172.20.0.21
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ============================================================
+  # SERVICE: Frontend (React + Vite — served via Nginx)
+  # ============================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: crm_frontend
+    restart: unless-stopped
+    networks:
+      crm_internal:
+        ipv4_address: 172.20.0.30
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # SERVICE: Nginx Reverse Proxy (Entry Point)
+  # ============================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: crm_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/nginx/ssl:/etc/nginx/ssl:ro
+      - static_files:/var/www/staticfiles:ro
+    networks:
+      crm_internal:
+        ipv4_address: 172.20.0.40
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
