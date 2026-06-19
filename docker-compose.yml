@@ -39,8 +39,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "127.0.0.1:5432:5432" # Bind to localhost only — never expose to 0.0.0.0 in prod
+    # Ports are NOT exposed to the host to prevent conflicts with VPS postgres
+    # ports:
+    #   - "127.0.0.1:5432:5432"
     networks:
       crm_internal:
         ipv4_address: 172.20.0.10
@@ -72,8 +73,9 @@ services:
       --loglevel warning
     volumes:
       - redis_data:/data
-    ports:
-      - "127.0.0.1:6379:6379"
+    # Ports are NOT exposed to the host to prevent conflicts
+    # ports:
+    #   - "127.0.0.1:6379:6379"
     networks:
       crm_internal:
         ipv4_address: 172.20.0.11
@@ -226,57 +228,8 @@ services:
         max-size: "20m"
         max-file: "5"
 
-  # ============================================================
-  # SERVICE: Frontend (React + Vite — served via Nginx)
-  # ============================================================
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: production
-    container_name: crm_frontend
-    restart: unless-stopped
-    networks:
-      crm_internal:
-        ipv4_address: 172.20.0.30
-    depends_on:
-      - backend
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
-
-  # ============================================================
-  # SERVICE: Nginx Reverse Proxy (Entry Point)
-  # ============================================================
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: crm_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./infra/nginx/ssl:/etc/nginx/ssl:ro
-      - static_files:/var/www/staticfiles:ro
-    networks:
-      crm_internal:
-        ipv4_address: 172.20.0.40
-    depends_on:
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "20m"
+        max-file: "5"
