@@ -140,7 +140,8 @@ async def verify_document(
 @router.delete(
     "/{document_id}",
     summary="Soft-delete a supplier document (admin only)",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessResponse[None],
 )
 async def delete_document(
     document_id: uuid.UUID,
@@ -152,3 +153,4 @@ async def delete_document(
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Document not found")
     await doc_repo.soft_delete(doc)
+    return SuccessResponse(data=None, message="Document deleted successfully")
