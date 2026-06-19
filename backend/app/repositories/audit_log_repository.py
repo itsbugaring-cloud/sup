@@ -27,8 +27,10 @@ class AuditLogRepository(BaseRepository[AuditLog]):
 
     model = AuditLog
 
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
+    def __init__(
+        self, session: AsyncSession, tenant_id: str | uuid.UUID | None = None
+    ) -> None:
+        super().__init__(session, tenant_id)
 
     # ── Write (Create Only — no update/delete) ────────────────────────────────
 
@@ -110,6 +112,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
             .order_by(AuditLog.created_at.desc())
             .limit(limit)
         )
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
@@ -142,4 +145,4 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         if conditions:
             stmt = stmt.where(and_(*conditions))
 
-        return stmt
+        return self._apply_tenant_filter(stmt)

@@ -21,8 +21,10 @@ class SupplierDocumentRepository(BaseRepository[SupplierDocument]):
 
     model = SupplierDocument
 
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
+    def __init__(
+        self, session: AsyncSession, tenant_id: str | uuid.UUID | None = None
+    ) -> None:
+        super().__init__(session, tenant_id)
 
     async def create_document(
         self,
@@ -68,6 +70,7 @@ class SupplierDocumentRepository(BaseRepository[SupplierDocument]):
             .where(and_(*conditions))
             .order_by(SupplierDocument.created_at.desc())
         )
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
@@ -79,6 +82,7 @@ class SupplierDocumentRepository(BaseRepository[SupplierDocument]):
             SupplierDocument.id == document_id,
             SupplierDocument.deleted_at.is_(None),
         )
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 

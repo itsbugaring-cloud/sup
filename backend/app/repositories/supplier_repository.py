@@ -40,8 +40,10 @@ class SupplierRepository(BaseRepository[Supplier]):
 
     model = Supplier
 
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
+    def __init__(
+        self, session: AsyncSession, tenant_id: str | uuid.UUID | None = None
+    ) -> None:
+        super().__init__(session, tenant_id)
 
     # ── Create ────────────────────────────────────────────────────────────────
 
@@ -77,6 +79,7 @@ class SupplierRepository(BaseRepository[Supplier]):
                 Supplier.deleted_at.is_(None),
             )
         )
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -92,6 +95,7 @@ class SupplierRepository(BaseRepository[Supplier]):
             Supplier.npwp_number == npwp_number,
             Supplier.deleted_at.is_(None),
         )
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -183,7 +187,7 @@ class SupplierRepository(BaseRepository[Supplier]):
         if conditions:
             stmt = stmt.where(and_(*conditions))
 
-        return stmt
+        return self._apply_tenant_filter(stmt)
 
     # ── Update ────────────────────────────────────────────────────────────────
 
@@ -240,6 +244,7 @@ class SupplierRepository(BaseRepository[Supplier]):
             .where(Supplier.deleted_at.is_(None))
             .group_by(Supplier.status)
         )
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return {row.status: row.count for row in result}
 
@@ -249,5 +254,6 @@ class SupplierRepository(BaseRepository[Supplier]):
             select(func.count(Supplier.id))
             .where(Supplier.deleted_at.is_(None))
         )
+        stmt = self._apply_tenant_filter(stmt)
         result = await self._session.execute(stmt)
         return result.scalar_one()
