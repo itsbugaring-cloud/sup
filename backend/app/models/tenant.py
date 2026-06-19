@@ -68,6 +68,8 @@ class User(TimestampMixin, Base):
     # roles: owner, admin, viewer
     role: Mapped[str] = mapped_column(String(50), nullable=False, server_default="viewer")
     
+    is_superadmin: Mapped[bool] = mapped_column(Boolean, server_default="false", nullable=False)
+    
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

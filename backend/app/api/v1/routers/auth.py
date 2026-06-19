@@ -65,6 +65,7 @@ async def register_tenant(
             "email": user.email,
             "display_name": user.display_name,
             "role": user.role,
+            "is_superadmin": user.is_superadmin,
         },
     )
 
@@ -108,6 +109,7 @@ async def login(
             "email": user.email,
             "display_name": user.display_name,
             "role": user.role,
+            "is_superadmin": user.is_superadmin,
         },
     )
 

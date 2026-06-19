@@ -41,4 +41,5 @@ class CurrentUserRead(CRMBaseModel):
     email: str
     display_name: str
     role: str
+    is_superadmin: bool = False
     is_active: bool

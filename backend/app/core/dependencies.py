@@ -88,6 +88,7 @@ async def get_current_user(
         email=payload.get("email", payload["sub"]),
         display_name=payload.get("display_name", ""),
         role=payload.get("role", "viewer"),
+        is_superadmin=payload.get("is_superadmin", False),
         is_active=payload.get("is_active", True),
     )
 
@@ -100,6 +101,18 @@ async def get_current_admin(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required",
+        )
+    return current_user
+
+
+async def get_current_superadmin(
+    current_user: Annotated[CurrentUserRead, Depends(get_current_user)],
+) -> CurrentUserRead:
+    """Require the current user to be a Super Admin (Platform Owner)."""
+    if not current_user.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super Admin privileges required",
         )
     return current_user
 
@@ -142,6 +155,7 @@ DocRepo = Annotated[SupplierDocumentRepository, Depends(get_doc_repo)]
 BotConfigRepo = Annotated[BotConfigRepository, Depends(get_bot_config_repo)]
 CurrentUser = Annotated[CurrentUserRead, Depends(get_current_user)]
 AdminUser = Annotated[CurrentUserRead, Depends(get_current_admin)]
+SuperadminUser = Annotated[CurrentUserRead, Depends(get_current_superadmin)]
 
 
 # ── Request Context ───────────────────────────────────────────────────────────
