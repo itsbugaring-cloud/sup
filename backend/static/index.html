@@ -1139,6 +1139,9 @@
                             <input type="text" id="search-input" class="search-input" placeholder="Search company, NPWP..." onkeyup="handleSearchKeyUp(event)">
                         </div>
 
+                        <input type="date" id="date-from" class="filter-select" title="Created After" style="min-width:120px;" onchange="handleFilterChange()">
+                        <input type="date" id="date-to" class="filter-select" title="Created Before" style="min-width:120px;" onchange="handleFilterChange()">
+
                         <button onclick="executeSearch()" class="btn-search">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                             Search
@@ -1338,10 +1341,18 @@
         async function fetchDashboardData() {
             showLoading(true);
             try {
+                const dateFrom = document.getElementById('date-from')?.value;
+                const dateTo = document.getElementById('date-to')?.value;
                 const [overviewRes, listRes] = await Promise.all([
                     axios.get(`${API_URL}/dashboard/overview`),
                     axios.get(`${API_URL}/suppliers`, {
-                        params: { page: currentPage, search: searchQuery || undefined, status: statusFilter || undefined }
+                        params: {
+                            page: currentPage,
+                            search: searchQuery || undefined,
+                            status: statusFilter || undefined,
+                            created_after: dateFrom ? new Date(dateFrom).toISOString() : undefined,
+                            created_before: dateTo ? new Date(dateTo + 'T23:59:59').toISOString() : undefined,
+                        }
                     })
                 ]);
 
@@ -1551,9 +1562,15 @@
                        </span>`;
 
                 const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.title = 'Click to view supplier details';
+                tr.onclick = () => window.location.href = `/supplier-detail.html?id=${s.id}`;
                 tr.innerHTML = `
                     <td>
-                        <div class="cell-company-name">${escapeHtml(s.company_name)}</div>
+                        <div class="cell-company-name" style="display:flex;align-items:center;gap:0.5rem;">
+                            ${escapeHtml(s.company_name)}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;color:var(--text-muted);opacity:0;transition:opacity 0.2s;" class="row-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
                         <div class="cell-mono">NPWP: ${escapeHtml(s.npwp_number || '—')}</div>
                     </td>
                     <td>
@@ -1564,6 +1581,8 @@
                     <td><span class="badge ${badgeClass}">${label}</span></td>
                     <td>${sourceBadge}</td>
                 `;
+                tr.addEventListener('mouseenter', () => { const a = tr.querySelector('.row-arrow'); if(a) a.style.opacity='1'; });
+                tr.addEventListener('mouseleave', () => { const a = tr.querySelector('.row-arrow'); if(a) a.style.opacity='0'; });
                 tbody.appendChild(tr);
             });
 
@@ -1593,6 +1612,10 @@
         function resetFilters() {
             document.getElementById('search-input').value = '';
             document.getElementById('status-filter').value = '';
+            const df = document.getElementById('date-from');
+            const dt = document.getElementById('date-to');
+            if (df) df.value = '';
+            if (dt) dt.value = '';
             searchQuery = '';
             statusFilter = '';
             currentPage = 1;
