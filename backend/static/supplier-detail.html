@@ -356,6 +356,28 @@
         .divider { height:1px; background:var(--border); margin:0.5rem 0; }
 
         .inline-edit-actions { display:flex; gap:0.5rem; margin-top:1rem; }
+        /* PURCHASES */
+        .purchase-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+        .purchase-table th { text-align: left; padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .purchase-table td { padding: 1rem; border-bottom: 1px solid var(--border-subtle); font-size: 0.8125rem; vertical-align: top; }
+        .purchase-items-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+        .purchase-item-row { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-subtle); }
+        
+        /* PURCHASE MODAL */
+        .modal-card {
+            background:#0f172a; border:1px solid var(--border); border-radius:18px;
+            padding:2rem; max-width:600px; width:100%; max-height: 90vh; overflow-y: auto;
+            box-shadow:0 32px 80px rgba(0,0,0,0.6);
+            transform:scale(0.93); transition:transform 0.25s ease;
+        }
+        .confirm-backdrop.visible .modal-card { transform:scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-title { font-size: 1.25rem; font-weight: 800; }
+        .modal-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+        .modal-close svg { width: 20px; height: 20px; }
+        
+        .item-input-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+        .btn-add-item { background: rgba(79,142,247,0.1); color: var(--brand); border: 1px dashed var(--brand); width: 100%; padding: 0.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8125rem; }
     </style>
 </head>
 <body>
@@ -386,6 +408,40 @@
     </div>
 </div>
 
+<!-- PURCHASE MODAL -->
+<div id="purchase-modal-backdrop" class="confirm-backdrop">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">Record New Purchase</div>
+            <button class="modal-close" onclick="closePurchaseModal()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="field-row" style="margin-bottom: 1rem;">
+            <label class="field-label">PO Number / Ref (Optional)</label>
+            <input type="text" id="p-po-number" class="field-input" placeholder="PO-2026-001">
+        </div>
+        <div class="field-row" style="margin-bottom: 1rem;">
+            <label class="field-label">Purchase Date</label>
+            <input type="date" id="p-date" class="field-input">
+        </div>
+        
+        <label class="field-label" style="margin-bottom: 0.5rem; display: block;">Items Purchased</label>
+        <div id="purchase-items-container">
+            <!-- Items will be injected here -->
+        </div>
+        <button class="btn-add-item" onclick="addPurchaseItemRow()">+ Add Another Item</button>
+        
+        <div class="field-row" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+            <label class="field-label">Notes (Optional)</label>
+            <textarea id="p-notes" class="field-textarea" rows="2" placeholder="Delivery details, payment terms..."></textarea>
+        </div>
+        
+        <div class="confirm-actions">
+            <button class="btn-cancel-modal" onclick="closePurchaseModal()">Cancel</button>
+            <button class="btn-confirm-modal" style="background:var(--brand);" id="submit-purchase-btn" onclick="submitPurchase()">Save Record</button>
+        </div>
+    </div>
+</div>
+
 <!-- CONFIRM DIALOG -->
 <div id="confirm-backdrop" class="confirm-backdrop">
     <div class="confirm-card">
@@ -410,6 +466,7 @@ let supplierId = null;
 let supplierData = null;
 let auditData = [];
 let docData = [];
+let purchaseData = [];
 let isEditMode = false;
 let pendingConfirm = null;
 
@@ -462,14 +519,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAll() {
     try {
-        const [sRes, aRes, dRes] = await Promise.all([
+        const [sRes, aRes, dRes, pRes] = await Promise.all([
             axios.get(`${API}/suppliers/${supplierId}`),
             axios.get(`${API}/audit-logs/supplier/${supplierId}`, { params: { limit: 50 } }).catch(() => ({ data: { data: [] } })),
             axios.get(`${API}/supplier-documents/${supplierId}`).catch(() => ({ data: { data: [] } })),
+            axios.get(`${API}/purchases/supplier/${supplierId}`).catch(() => ({ data: { data: [] } })),
         ]);
         supplierData = sRes.data.data;
         auditData = aRes.data.data || [];
         docData = dRes.data.data || [];
+        purchaseData = pRes.data?.data || [];
         renderPage();
     } catch(err) {
         console.error(err);
@@ -703,6 +762,22 @@ function renderPage() {
         </div>
     </div>
 
+    <!-- PURCHASE HISTORY -->
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                Purchase History
+            </div>
+            <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="openPurchaseModal()">
+                + Add Purchase
+            </button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+            ${renderPurchases()}
+        </div>
+    </div>
+
     <!-- AUDIT TRAIL -->
     <div class="panel">
         <div class="panel-header">
@@ -801,6 +876,135 @@ function renderAuditTrail() {
             </div>
         </div>`;
     }).join('')}</div>`;
+}
+
+        </div>`;
+    }).join('')}</div>`;
+}
+
+// ── PURCHASES ────────────────────────────────────────────────────────────────
+function renderPurchases() {
+    if (!purchaseData || purchaseData.length === 0) return `
+        <div class="section-empty">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <p>No purchase records yet.</p>
+        </div>`;
+
+    let html = `<table class="purchase-table">
+        <thead>
+            <tr>
+                <th>Date & PO #</th>
+                <th>Items</th>
+                <th style="text-align:right;">Total</th>
+            </tr>
+        </thead>
+        <tbody>`;
+        
+    purchaseData.forEach(p => {
+        let itemsHtml = `<ul class="purchase-items-list">`;
+        p.items.forEach(item => {
+            itemsHtml += `<li><strong>${escHtml(item.item_name)}</strong> &times; ${item.quantity} ${escHtml(item.unit)}</li>`;
+        });
+        itemsHtml += `</ul>`;
+        
+        let totalStr = p.total_amount ? `Rp ${parseFloat(p.total_amount).toLocaleString('id-ID')}` : '—';
+        
+        html += `
+            <tr>
+                <td>
+                    <div style="font-weight:700;color:var(--text-primary);">${fmtDate(p.purchase_date).split(' ')[0]}</div>
+                    <div style="font-size:0.75rem;color:var(--brand);font-family:monospace;margin-top:0.2rem;">${escHtml(p.po_number || 'No Ref')}</div>
+                </td>
+                <td>${itemsHtml}</td>
+                <td style="text-align:right;font-weight:600;color:var(--success);">${totalStr}</td>
+            </tr>
+        `;
+    });
+    
+    html += `</tbody></table>`;
+    return html;
+}
+
+function openPurchaseModal() {
+    document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('p-po-number').value = '';
+    document.getElementById('p-notes').value = '';
+    document.getElementById('purchase-items-container').innerHTML = '';
+    addPurchaseItemRow();
+    document.getElementById('purchase-modal-backdrop').classList.add('visible');
+}
+
+function closePurchaseModal() {
+    document.getElementById('purchase-modal-backdrop').classList.remove('visible');
+}
+
+function addPurchaseItemRow() {
+    const container = document.getElementById('purchase-items-container');
+    const row = document.createElement('div');
+    row.className = 'item-input-row';
+    row.innerHTML = `
+        <input type="text" class="field-input item-name" placeholder="Item Name (e.g. Laptop)">
+        <input type="number" class="field-input item-qty" placeholder="Qty" step="0.01">
+        <input type="text" class="field-input item-unit" placeholder="Unit (Pcs, Kg)">
+        <button class="btn btn-danger" style="padding:0.6rem;" onclick="this.parentElement.remove()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    `;
+    container.appendChild(row);
+}
+
+async function submitPurchase() {
+    const btn = document.getElementById('submit-purchase-btn');
+    const poNumber = v('p-po-number');
+    const dateVal = v('p-date');
+    const notes = v('p-notes');
+    
+    const rows = document.querySelectorAll('#purchase-items-container .item-input-row');
+    const items = [];
+    
+    let hasError = false;
+    rows.forEach(row => {
+        const name = row.querySelector('.item-name').value.trim();
+        const qty = parseFloat(row.querySelector('.item-qty').value);
+        const unit = row.querySelector('.item-unit').value.trim();
+        
+        if (!name || isNaN(qty) || !unit) {
+            hasError = true;
+        } else {
+            items.push({ item_name: name, quantity: qty, unit: unit });
+        }
+    });
+    
+    if (items.length === 0 || hasError) {
+        showToast('Please fill all item fields correctly.', 'error');
+        return;
+    }
+    
+    const payload = {
+        supplier_id: supplierId,
+        po_number: poNumber || null,
+        purchase_date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString(),
+        notes: notes || null,
+        items: items
+    };
+    
+    try {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+        await axios.post(`${API}/purchases`, payload);
+        showToast('Purchase record added!', 'success');
+        
+        // Reload purchases
+        const pRes = await axios.get(`${API}/purchases/supplier/${supplierId}`);
+        purchaseData = pRes.data?.data || [];
+        renderPage();
+        closePurchaseModal();
+    } catch(err) {
+        showToast(err.response?.data?.detail || 'Failed to save purchase.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Record';
+    }
 }
 
 // ── EDIT ─────────────────────────────────────────────────────────────────────
