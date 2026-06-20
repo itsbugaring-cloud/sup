@@ -14,6 +14,7 @@ from app.models.audit_log import AuditAction, AuditActorType, AuditLog
 from app.models.supplier import Supplier, SupplierStatus
 from app.models.supplier_document import DocumentType, SupplierDocument
 from app.models.bot_config import BotConfig
+from app.models.purchase import PurchaseOrder, PurchaseItem, PurchaseStatus
 
 __all__ = [
     "Base",
@@ -31,4 +32,7 @@ __all__ = [
     "DocumentType",
     "SupplierDocument",
     "BotConfig",
+    "PurchaseOrder",
+    "PurchaseItem",
+    "PurchaseStatus",
 ]
