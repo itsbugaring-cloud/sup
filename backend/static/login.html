@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supplier CRM — Sign In</title>
-    <meta name="description" content="Sign in to your Supplier CRM workspace. Enterprise multi-tenant supplier management platform.">
+    <meta name="description" content="Sign in to your Supplier CRM workspace.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -533,23 +533,22 @@
             gap: 0.25rem;
         }
 
-        .badge-enterprise {
+        .badge-system {
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
-            background: rgba(79,142,247,0.1);
-            border: 1px solid rgba(79,142,247,0.2);
+            gap: 0.35rem;
+            padding: 0.35rem 0.85rem;
+            background: rgba(79,142,247,0.12);
+            border: 1px solid rgba(79,142,247,0.25);
             border-radius: 100px;
-            padding: 0.25rem 0.75rem;
+            color: var(--brand);
             font-size: 0.6875rem;
-            font-weight: 600;
-            color: #93c5fd;
-            letter-spacing: 0.05em;
+            font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 0.75rem;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.25rem;
         }
-
-        .badge-enterprise svg { width: 10px; height: 10px; }
+        .badge-system svg { width: 10px; height: 10px; }
 
         /* Animate in */
         .page-wrapper {
@@ -575,9 +574,9 @@
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
         </div>
-        <div class="badge-enterprise">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Enterprise SaaS
+        <div class="badge-system">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Secure System
         </div>
         <h1>Supplier CRM</h1>
         <p>Secure multi-tenant supplier management platform</p>
@@ -669,6 +668,8 @@
                     </div>
                 </button>
             </form>
+                        <h4>Secure Registration</h4>
+                        <p>Your workspace is protected by industry-standard encryption</p>
         </div>
     </div>
 
