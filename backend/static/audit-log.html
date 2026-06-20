@@ -16,15 +16,14 @@
             --border: rgba(255,255,255,0.06); --border-subtle: rgba(255,255,255,0.04); --border-hover: rgba(255,255,255,0.12);
             --text-primary: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #4b5a72;
         }
-        html { font-size: 14px; }
+        html { font-size: 14px; color-scheme: dark; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; -webkit-font-smoothing: antialiased; }
-        body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse 60% 40% at 10% 0%, rgba(79,142,247,0.07) 0%, transparent 55%), radial-gradient(ellipse 40% 30% at 90% 100%, rgba(124,58,237,0.05) 0%, transparent 55%); pointer-events:none; z-index:0; }
-        body::after { content:''; position:fixed; inset:0; background-image: linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px); background-size: 60px 60px; pointer-events:none; z-index:0; }
+        body::after { content:''; position:fixed; inset:0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 40px 40px; pointer-events:none; z-index:0; }
 
         /* TOPBAR */
         .topbar { height:64px; background:rgba(7,12,24,0.92); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; display:flex; align-items:center; padding:0 1.5rem; gap:1rem; }
         .topbar-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; flex-shrink:0; }
-        .topbar-logo { width:34px; height:34px; background:linear-gradient(135deg,var(--brand),var(--accent)); border-radius:9px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(79,142,247,0.3); }
+        .topbar-logo { width:34px; height:34px; background:var(--brand); border-radius:9px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(79,142,247,0.3); }
         .topbar-logo svg { width:18px; height:18px; color:#fff; }
         .topbar-brand-name { font-size:1rem; font-weight:800; letter-spacing:-0.025em; }
         .topbar-right { margin-left:auto; display:flex; align-items:center; gap:0.75rem; }
@@ -57,10 +56,12 @@
             padding:0.5625rem 0.75rem; outline:none; transition:all 0.2s;
         }
         .filter-select:focus, .filter-input:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(79,142,247,0.1); }
+        .filter-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; }
         .filter-select option { background:#0d1525; }
         .filter-input::placeholder { color:var(--text-muted); }
-        .btn-filter { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5625rem 1rem; background:linear-gradient(135deg,var(--brand),var(--accent)); border:none; border-radius:8px; color:#fff; font-size:0.8125rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; white-space:nowrap; transition:all 0.2s; }
-        .btn-filter:hover { transform:translateY(-1px); }
+        .btn-filter { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5625rem 1rem; background:var(--brand); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-size:0.8125rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; white-space:nowrap; transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(79,142,247,0.25); }
+        .btn-filter:hover { transform:translateY(-1px); background:#3b76e1; box-shadow: 0 6px 16px rgba(79,142,247,0.4); }
+        .btn-filter:active { transform:scale(0.97); }
         .btn-filter svg { width:14px; height:14px; }
 
         /* PANEL */

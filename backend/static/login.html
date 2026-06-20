@@ -28,6 +28,7 @@
 
         html, body {
             height: 100%;
+            color-scheme: dark;
         }
 
         body {
@@ -42,19 +43,6 @@
             overflow-x: hidden;
         }
 
-        /* Animated background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: 
-                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,142,247,0.12) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 60% at 80% 80%, rgba(124,58,237,0.10) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 40% at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
         /* Grid lines */
         body::after {
             content: '';
@@ -63,29 +51,9 @@
             background-image: 
                 linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 60px 60px;
+            background-size: 40px 40px;
             pointer-events: none;
             z-index: 0;
-        }
-
-        /* Floating orbs */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.5;
-            pointer-events: none;
-            z-index: 0;
-            animation: float-orb 12s ease-in-out infinite;
-        }
-        .orb-1 { width: 400px; height: 400px; background: rgba(79,142,247,0.15); top: -100px; left: -100px; animation-delay: 0s; }
-        .orb-2 { width: 300px; height: 300px; background: rgba(124,58,237,0.12); bottom: -80px; right: -80px; animation-delay: -6s; }
-        .orb-3 { width: 200px; height: 200px; background: rgba(16,185,129,0.08); top: 50%; left: 50%; animation-delay: -3s; }
-
-        @keyframes float-orb {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(20px, -20px) scale(1.05); }
-            66% { transform: translate(-15px, 10px) scale(0.95); }
         }
 
         .page-wrapper {
@@ -107,11 +75,10 @@
             justify-content: center;
             width: 56px;
             height: 56px;
-            background: linear-gradient(135deg, var(--brand), var(--accent));
+            background: var(--brand);
             border-radius: 16px;
             margin-bottom: 1rem;
             box-shadow: 0 8px 32px rgba(79,142,247,0.35);
-            animation: logo-pulse 3s ease-in-out infinite;
         }
 
         @keyframes logo-pulse {
@@ -125,9 +92,7 @@
             font-size: 1.5rem;
             font-weight: 800;
             letter-spacing: -0.03em;
-            background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #f1f5f9;
         }
 
         .brand-header p {
@@ -306,40 +271,31 @@
         /* Submit Button */
         .btn-primary {
             width: 100%;
-            padding: 0.875rem;
-            background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
-            border: none;
+            padding: 0.875rem 1.5rem;
+            background: var(--brand);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             color: #fff;
-            font-size: 0.9375rem;
+            font-size: 0.875rem;
             font-weight: 700;
             font-family: 'Inter', sans-serif;
             cursor: pointer;
-            letter-spacing: 0.01em;
-            transition: all 0.25s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            margin-top: 0.5rem;
+            box-shadow: 0 8px 24px rgba(79,142,247,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
+        .btn-primary:active:not(:disabled) { transform: scale(0.97); }
 
-        .btn-primary:hover::before { opacity: 1; }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
+        .btn-primary:hover:not(:disabled) {
+            background: #3b76e1;
+            transform: translateY(-2px);
             box-shadow: 0 12px 32px rgba(79,142,247,0.4);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0) scale(0.98);
         }
 
         .btn-primary:disabled {
@@ -563,10 +519,7 @@
 </head>
 <body>
 
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div class="orb orb-3"></div>
-
+<!-- Decorative Background -->
 <div class="page-wrapper">
     <div class="brand-header">
         <div class="brand-logo">

@@ -34,7 +34,7 @@
             --text-muted: #4b5a72;
         }
 
-        html { font-size: 14px; }
+        html { font-size: 14px; color-scheme: dark; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -46,25 +46,14 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 70% 50% at 5% 0%, rgba(6,182,212,0.07) 0%, transparent 55%),
-                radial-gradient(ellipse 50% 40% at 95% 100%, rgba(79,142,247,0.06) 0%, transparent 55%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
         body::after {
             content: '';
             position: fixed;
             inset: 0;
             background-image:
-                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
-            background-size: 60px 60px;
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
             pointer-events: none;
             z-index: 0;
         }
@@ -95,7 +84,7 @@
         .topbar-logo {
             width: 34px;
             height: 34px;
-            background: linear-gradient(135deg, var(--teal), var(--brand));
+            background: var(--teal);
             border-radius: 9px;
             display: flex;
             align-items: center;
@@ -197,7 +186,13 @@
         }
 
         .btn-logout svg { width: 13px; height: 13px; }
-        .btn-logout:hover { background: rgba(239,68,68,0.14); }
+        .btn-logout:hover {
+            background: rgba(239,68,68,0.15);
+            color: #fecaca;
+            border-color: rgba(239,68,68,0.35);
+            transform: translateY(-1px);
+        }
+        .btn-logout:active { transform: scale(0.97); }
 
         /* MAIN LAYOUT */
         .main-content {
@@ -324,47 +319,20 @@
             background: rgba(0,0,0,0.1);
         }
 
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.625rem 1.125rem;
-            border-radius: 10px;
-            font-size: 0.8125rem;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.625rem 1.125rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 700;
+            font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .btn-action svg { width: 14px; height: 14px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:active:not(:disabled) { transform: scale(0.97); }
 
-        .btn-action:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn-primary { background: var(--teal); color: #fff; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(6,182,212,0.25); }
+        .btn-primary:not(:disabled):hover { background: #0891b2; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(6,182,212,0.4); }
 
-        .btn-test {
-            background: rgba(6,182,212,0.12);
-            border: 1px solid rgba(6,182,212,0.25);
-            color: var(--teal);
-        }
-
-        .btn-test:not(:disabled):hover {
-            background: rgba(6,182,212,0.2);
-            transform: translateY(-1px);
-        }
-
-        .btn-webhook {
-            background: rgba(79,142,247,0.12);
-            border: 1px solid rgba(79,142,247,0.25);
-            color: var(--brand);
-        }
-
-        .btn-webhook:not(:disabled):hover {
-            background: rgba(79,142,247,0.2);
-            transform: translateY(-1px);
-        }
+        .btn-ghost { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-secondary); }
+        .btn-ghost:not(:disabled):hover { background: rgba(255,255,255,0.08); color: var(--text-primary); transform: translateY(-1px); }
 
         /* MAIN GRID: form + sidebar */
         .main-grid {
@@ -413,18 +381,21 @@
             letter-spacing: 0;
         }
 
-        .field-input, .field-textarea {
+        .field-input, .field-textarea, .field-select {
             width: 100%;
-            background: rgba(0,0,0,0.3);
+            background: var(--surface-3);
             border: 1px solid var(--border);
-            border-radius: 9px;
+            border-radius: 8px;
             color: var(--text-primary);
             font-size: 0.875rem;
             font-family: 'Inter', sans-serif;
-            padding: 0.6875rem 0.875rem;
+            padding: 0.625rem 0.875rem;
             outline: none;
             transition: all 0.2s ease;
         }
+
+        .field-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; }
+        .field-select option { background: #1a2235; }
 
         .field-input::placeholder, .field-textarea::placeholder {
             color: var(--text-muted);
@@ -565,15 +536,15 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, var(--brand), var(--accent));
-            border: none;
+            background: var(--brand);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 10px;
             color: #fff;
             font-size: 0.875rem;
             font-weight: 700;
             font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 16px rgba(79,142,247,0.25);
         }
 
@@ -581,10 +552,11 @@
 
         .btn-save:hover:not(:disabled) {
             transform: translateY(-1px);
+            background: #3b76e1;
             box-shadow: 0 8px 24px rgba(79,142,247,0.4);
         }
 
-        .btn-save:active { transform: scale(0.98); }
+        .btn-save:active:not(:disabled) { transform: scale(0.98); }
 
         .btn-save:disabled {
             opacity: 0.5;

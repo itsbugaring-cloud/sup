@@ -33,7 +33,7 @@
             --text-muted: #4b5a72;
         }
 
-        html { font-size: 14px; }
+        html { font-size: 14px; color-scheme: dark; }
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg);
@@ -42,20 +42,11 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        body::before {
-            content: '';
-            position: fixed; inset: 0;
-            background:
-                radial-gradient(ellipse 60% 40% at 10% 0%, rgba(79,142,247,0.07) 0%, transparent 55%),
-                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(124,58,237,0.05) 0%, transparent 55%);
-            pointer-events: none; z-index: 0;
-        }
-
         body::after {
             content: '';
             position: fixed; inset: 0;
-            background-image: linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
-            background-size: 60px 60px;
+            background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
             pointer-events: none; z-index: 0;
         }
 
@@ -70,7 +61,7 @@
             padding: 0 1.5rem; gap: 1rem;
         }
         .topbar-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; flex-shrink:0; }
-        .topbar-logo { width:34px; height:34px; background:linear-gradient(135deg,var(--brand),var(--accent)); border-radius:9px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(79,142,247,0.3); }
+        .topbar-logo { width:34px; height:34px; background:var(--brand); border-radius:9px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(79,142,247,0.3); }
         .topbar-logo svg { width:18px; height:18px; color:#fff; }
         .topbar-brand-name { font-size:1rem; font-weight:800; letter-spacing:-0.025em; color:var(--text-primary); }
         .topbar-right { margin-left:auto; display:flex; align-items:center; gap:0.75rem; }
@@ -185,7 +176,9 @@
             background:rgba(79,142,247,0.05);
             box-shadow:0 0 0 3px rgba(79,142,247,0.1);
         }
+        .field-input[type="date"] { color-scheme: dark; }
         .field-textarea { resize:vertical; min-height:90px; }
+        .field-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; }
         .field-select option { background:#0d1525; color:var(--text-primary); }
         .edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
         @media(max-width:600px) { .edit-grid { grid-template-columns:1fr; } }
@@ -197,23 +190,24 @@
             border-radius:9px;
             font-size:0.8125rem; font-weight:700;
             font-family:'Inter',sans-serif;
-            cursor:pointer; transition:all 0.2s ease;
+            cursor:pointer; transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border:1px solid transparent;
         }
         .btn svg { width:14px; height:14px; }
         .btn:disabled { opacity:0.5; cursor:not-allowed; }
-        .btn-primary { background:linear-gradient(135deg,var(--brand),var(--accent)); color:#fff; box-shadow:0 4px 14px rgba(79,142,247,0.25); }
-        .btn-primary:not(:disabled):hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(79,142,247,0.4); }
+        .btn:active:not(:disabled) { transform:scale(0.97); }
+        .btn-primary { background:var(--brand); color:#fff; box-shadow:0 4px 14px rgba(79,142,247,0.25); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-primary:not(:disabled):hover { background: #3b76e1; transform:translateY(-1px); box-shadow:0 6px 20px rgba(79,142,247,0.4); }
         .btn-ghost { background:rgba(255,255,255,0.04); border-color:var(--border); color:var(--text-secondary); }
-        .btn-ghost:not(:disabled):hover { background:rgba(255,255,255,0.08); color:var(--text-primary); }
+        .btn-ghost:not(:disabled):hover { background:rgba(255,255,255,0.08); color:var(--text-primary); transform:translateY(-1px); }
         .btn-success { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.25); color:#6ee7b7; }
-        .btn-success:not(:disabled):hover { background:rgba(16,185,129,0.2); }
+        .btn-success:not(:disabled):hover { background:rgba(16,185,129,0.2); transform:translateY(-1px); }
         .btn-danger { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.25); color:#fca5a5; }
-        .btn-danger:not(:disabled):hover { background:rgba(239,68,68,0.18); }
+        .btn-danger:not(:disabled):hover { background:rgba(239,68,68,0.18); transform:translateY(-1px); }
         .btn-warn { background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.25); color:#fcd34d; }
-        .btn-warn:not(:disabled):hover { background:rgba(245,158,11,0.18); }
+        .btn-warn:not(:disabled):hover { background:rgba(245,158,11,0.18); transform:translateY(-1px); }
         .btn-purple { background:rgba(124,58,237,0.12); border-color:rgba(124,58,237,0.25); color:#c4b5fd; }
-        .btn-purple:not(:disabled):hover { background:rgba(124,58,237,0.2); }
+        .btn-purple:not(:disabled):hover { background:rgba(124,58,237,0.2); transform:translateY(-1px); }
 
         /* ACTION BUTTONS ROW */
         .status-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
@@ -377,7 +371,9 @@
         .modal-close svg { width: 20px; height: 20px; }
         
         .item-input-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
-        .btn-add-item { background: rgba(79,142,247,0.1); color: var(--brand); border: 1px dashed var(--brand); width: 100%; padding: 0.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8125rem; }
+        .btn-add-item { background: rgba(79,142,247,0.1); color: var(--brand); border: 1px dashed var(--brand); width: 100%; padding: 0.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8125rem; transition: all 0.2s ease; }
+        .btn-add-item:hover { background: rgba(79,142,247,0.15); transform: translateY(-1px); }
+        .btn-add-item:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
