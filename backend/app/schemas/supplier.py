@@ -241,6 +241,7 @@ class SupplierListRead(CRMBaseModel):
     category: str | None
     status: SupplierStatus
     document_count: int = 0    # Computed by repository query
+    submitted_by_telegram_username: str | None = None
     created_at: datetime
     updated_at: datetime
 

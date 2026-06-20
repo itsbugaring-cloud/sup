@@ -42,6 +42,8 @@ async def export_suppliers_job(
     ctx: dict[str, Any],
     filters_dict: dict[str, Any],
     actor_id: str,
+    tenant_id: str,
+    actor_display_name: str,
     task_id: str,
 ) -> dict[str, Any]:
     """
@@ -66,10 +68,12 @@ async def export_suppliers_job(
         Dict with `download_url` and `filename`.
     """
     from app.core.database import get_db_session_context
+    from app.repositories.bot_config_repository import BotConfigRepository
     from app.repositories.supplier_repository import SupplierRepository
     from app.schemas.supplier import SupplierFilter
     from app.services.export_service import generate_supplier_excel
     from app.services.minio_service import MinIOService
+    from app.services.telegram_notifier import TelegramNotifier
 
     logger.info("export_job_started", task_id=task_id, actor_id=actor_id)
 
@@ -84,7 +88,7 @@ async def export_suppliers_job(
         minio = MinIOService()
 
         async with get_db_session_context() as db:
-            repo = SupplierRepository(db)
+            repo = SupplierRepository(db, tenant_id=tenant_id)
             suppliers = await repo.list_for_export(filters)
 
         logger.info("export_fetched_suppliers", count=len(suppliers), task_id=task_id)
@@ -111,6 +115,16 @@ async def export_suppliers_job(
             "row_count": len(suppliers),
             "completed_at": datetime.now(tz=timezone.utc).isoformat(),
         }
+
+        async with get_db_session_context() as db:
+            await TelegramNotifier(
+                BotConfigRepository(db, tenant_id=tenant_id)
+            ).send_export_event(
+                total_rows=len(suppliers),
+                actor_display_name=actor_display_name,
+                mode="completed",
+                download_url=download_url,
+            )
 
         # Store final result in Redis (24-hour TTL)
         import json

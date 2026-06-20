@@ -19,6 +19,7 @@ from fastapi import APIRouter, File, Form, Request, UploadFile, status
 from app.core.dependencies import (
     AdminUser,
     AuditRepo,
+    BotConfigRepo,
     CurrentUser,
     DocRepo,
     SupplierRepo,
@@ -31,6 +32,7 @@ from app.schemas.common import SuccessResponse
 from app.schemas.supplier_document import DocumentVerifyUpdate, SupplierDocumentRead
 from app.services.minio_service import MinIOService
 from app.services.supplier_service import SupplierService
+from app.services.telegram_notifier import TelegramNotifier
 
 router = APIRouter(prefix="/supplier-documents", tags=["supplier-documents"])
 
@@ -61,6 +63,7 @@ async def upload_document(
     current_user: CurrentUser,
     supplier_repo: SupplierRepo,
     audit_repo: AuditRepo,
+    bot_repo: BotConfigRepo,
     doc_repo: DocRepo,
     file: UploadFile = File(..., description="Document file (PDF, JPG, PNG, DOCX, XLSX)"),
     document_type: DocumentType = Form(..., description="Type of document"),
@@ -75,6 +78,13 @@ async def upload_document(
         request_id=get_request_id(request),
         ip_address=get_client_ip(request),
     )
+    supplier = await supplier_repo.get_active_by_id(supplier_id)
+    if supplier:
+        await TelegramNotifier(bot_repo).send_document_uploaded(
+            supplier,
+            document_type.value,
+            current_user.display_name or current_user.email,
+        )
     return SuccessResponse(data=result, message="Document uploaded successfully")
 
 

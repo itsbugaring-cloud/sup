@@ -3,194 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supplier CRM - Bot Configuration</title>
-    
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
+    <title>Supplier CRM - Telegram Ops</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Manrope', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'monospace'],
                     },
                     colors: {
-                        primary: {
-                            50: '#f0f4f8',
-                            100: '#dbe3ed',
-                            500: '#1E3A5F',
-                            600: '#152b47',
-                            700: '#0d1d30',
-                        }
-                    }
-                }
-            }
-        }
+                        ink: '#08111f',
+                    },
+                },
+            },
+        };
     </script>
-    
     <style>
         body {
-            background-color: #f8fafc;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 24%),
+                radial-gradient(circle at top right, rgba(16, 185, 129, 0.14), transparent 22%),
+                linear-gradient(180deg, #eef4fb 0%, #f8fafc 55%, #edf4f7 100%);
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
+        .panel {
+            background: rgba(255, 255, 255, 0.84);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 0 24px 60px rgba(7, 15, 28, 0.08);
         }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
-    <!-- Navbar -->
-    <nav class="bg-primary-500 text-white shadow-lg sticky top-0 z-40 border-b border-primary-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center space-x-8">
-                    <span class="font-bold text-xl tracking-wide flex items-center gap-2.5">
-                        <i data-lucide="building-2" class="h-6 w-6 text-blue-300"></i> CRM Supplier
-                    </span>
-                    <div class="hidden sm:flex space-x-3">
-                        <a href="/" class="text-blue-100 hover:text-white hover:bg-white/5 px-3.5 py-2 rounded-xl text-sm font-medium tracking-wide transition-all">Dashboard</a>
-                        <a href="/bot-config.html" class="bg-white/10 text-white px-3.5 py-2 rounded-xl text-sm font-semibold tracking-wide shadow-inner">Bot Config</a>
+<body class="text-slate-900">
+    <nav class="sticky top-0 z-40 border-b border-white/60 bg-ink/90 text-white backdrop-blur-xl">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-2xl bg-white/10 p-2.5 ring-1 ring-white/10">
+                        <i data-lucide="send" class="h-5 w-5 text-teal-300"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.24em] text-slate-300">Supplier CRM</p>
+                        <h1 class="text-lg font-extrabold tracking-tight">Telegram Operations</h1>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span id="user-display-name" class="text-sm font-medium text-blue-100 hidden md:block bg-primary-600 px-3 py-1.5 rounded-xl border border-primary-700"></span>
-                    <button onclick="handleLogout()" class="text-sm font-semibold bg-red-600/90 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-all shadow-md active:scale-95">
-                        Logout
-                    </button>
+                <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 md:flex">
+                    <a href="/" class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10">Overview</a>
+                    <a href="/bot-config.html" class="rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink">Telegram Ops</a>
                 </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="user-display-name" class="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 md:block"></div>
+                <button onclick="handleLogout()" class="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600">
+                    Logout
+                </button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <main class="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        <!-- Header -->
-        <div>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Telegram Bot Configuration</h1>
-            <p class="text-sm text-slate-500 mt-1">Configure your bot credentials, webhook routing, and automatic notifications.</p>
-        </div>
-
-        <!-- Configuration Card -->
-        <div class="glass-card rounded-2xl overflow-hidden shadow-sm p-6 sm:p-8 space-y-6">
-            
-            <!-- Global Info Panel (Dynamically shown if token is active) -->
-            <div id="bot-identity-panel" class="hidden bg-blue-50 border border-blue-100 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h3 id="bot-username-title" class="text-sm font-bold text-blue-800">Bot Active: @-</h3>
-                    <p id="bot-hint-desc" class="text-xs text-blue-600 mt-0.5">Token: ending in -</p>
+    <main class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <section class="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+            <div class="panel rounded-[2rem] p-6 lg:p-8">
+                <div class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="max-w-2xl">
+                        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-sky-500"></span>
+                            Telegram integration control
+                        </div>
+                        <h2 class="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Status, notifications, and two-way actions in one ops panel.</h2>
+                        <p class="mt-3 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+                            Manage bot identity, webhook routing, target chats, and notification rules. The same bot can now push updates and receive review actions back into the dashboard.
+                        </p>
+                    </div>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <button id="test-btn" onclick="sendTestMessage()" class="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-900">
+                            Send Test
+                        </button>
+                        <button id="webhook-btn" onclick="registerWebhook()" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300">
+                            Register Webhook
+                        </button>
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-2.5">
-                    <button 
-                        id="test-btn"
-                        onclick="sendTestMessage()"
-                        class="px-4 py-2 text-xs font-semibold rounded-xl text-blue-700 bg-blue-100 hover:bg-blue-200 active:scale-95 transition-all shadow-sm"
-                    >
-                        Send Test Message
-                    </button>
-                    <button 
-                        id="webhook-btn"
-                        onclick="registerWebhook()"
-                        class="px-4 py-2 text-xs font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
-                    >
-                        Register Webhook
-                    </button>
+
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" id="status-cards">
+                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Bot identity</p>
+                        <p id="bot-identity-card" class="mt-3 text-lg font-extrabold text-slate-950">Not connected</p>
+                    </article>
+                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Webhook</p>
+                        <p id="webhook-state-card" class="mt-3 text-lg font-extrabold text-slate-950">Unknown</p>
+                    </article>
+                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Notifications</p>
+                        <p id="notifications-state-card" class="mt-3 text-lg font-extrabold text-slate-950">Unknown</p>
+                    </article>
+                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Targets</p>
+                        <p id="targets-state-card" class="mt-3 text-lg font-extrabold text-slate-950">0 chats</p>
+                    </article>
                 </div>
             </div>
 
-            <!-- Form -->
-            <form id="config-form" onsubmit="saveConfiguration(event)" class="space-y-6">
-                <!-- Bot Token -->
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700">Bot Token (from @BotFather)</label>
-                    <input 
-                        type="password" 
-                        id="bot-token"
-                        placeholder="1234567890:AAH..."
-                        class="mt-1.5 block w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary-500 sm:text-sm bg-white"
-                    />
-                    <p id="token-placeholder-note" class="hidden text-xs text-slate-400 mt-1.5">Leave blank to keep the currently active token.</p>
+            <aside class="panel rounded-[2rem] p-6">
+                <div class="mb-6">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Bot Playbook</p>
+                    <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">Operator guide</h3>
                 </div>
-
-                <!-- Webhook URL -->
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700">Webhook URL</label>
-                    <div class="mt-1.5 relative rounded-md shadow-sm">
-                        <input 
-                            type="url" 
-                            id="webhook-url"
-                            placeholder="https://api.yourdomain.com/webhook"
-                            class="block w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary-500 sm:text-sm bg-white"
-                        />
+                <div class="space-y-4">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Recommended commands</p>
+                        <div class="mt-3 space-y-2 font-mono text-sm text-slate-700">
+                            <p>/start</p>
+                            <p>/stats</p>
+                            <p>/pending</p>
+                        </div>
                     </div>
-                    <p id="webhook-status" class="mt-2 text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                        Webhook Status: <span id="webhook-badge" class="font-bold">-</span>
-                    </p>
-                </div>
-
-                <!-- Target Chat IDs -->
-                <div>
-                    <div class="flex justify-between items-baseline">
-                        <label class="block text-sm font-semibold text-slate-700">Target Chat IDs</label>
-                        <span class="text-xs text-slate-400">One target per line</span>
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Webhook target</p>
+                        <p id="suggested-webhook" class="mt-3 break-all font-mono text-sm text-slate-700">Waiting for workspace context...</p>
                     </div>
-                    <p class="text-xs text-slate-400 mt-0.5 mb-2">Format: <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">-100123456789: Ops Team</code></p>
-                    <textarea 
-                        id="chat-ids-text"
-                        rows="4"
-                        placeholder="-100123456789: Alert Group&#10;987654321: Admin Personal"
-                        class="block w-full border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary-500 sm:text-sm font-mono bg-white"
-                    ></textarea>
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Current issue stream</p>
+                        <p id="last-error-note" class="mt-3 text-sm text-slate-600">No bot errors recorded.</p>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+            <form id="config-form" class="panel rounded-[2rem] p-6 lg:p-8" onsubmit="saveConfiguration(event)">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Configuration</p>
+                        <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">Bot identity and delivery routes</h3>
+                    </div>
+                    <div id="loading-spinner" class="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600">
+                        <i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i>
+                        Saving...
+                    </div>
                 </div>
 
-                <!-- Notifications Toggle -->
-                <div class="flex items-center space-x-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <input 
-                        id="notifications-enabled" 
-                        type="checkbox" 
-                        class="h-4.5 w-4.5 text-primary-500 focus:ring-primary-500 border-slate-300 rounded-lg cursor-pointer"
-                    />
-                    <label htmlFor="notifications-enabled" class="text-sm font-semibold text-slate-800 cursor-pointer select-none">
-                        Enable Automated Notifications
+                <div class="grid gap-6">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <label class="text-sm font-bold text-slate-800">Bot Token</label>
+                        <input id="bot-token" type="password" placeholder="1234567890:AA..." class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
+                        <p id="token-placeholder-note" class="mt-2 hidden text-xs text-slate-400">Leave blank to keep the current encrypted token.</p>
+                    </div>
+
+                    <div class="grid gap-6 lg:grid-cols-2">
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                            <label class="text-sm font-bold text-slate-800">Webhook URL</label>
+                            <input id="webhook-url" type="url" placeholder="https://your-domain/api/v1/webhook/tenant-id" class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
+                            <p class="mt-3 text-xs text-slate-400">Use the tenant-specific webhook route so Telegram callbacks can identify the workspace.</p>
+                        </div>
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                            <label class="text-sm font-bold text-slate-800">Webhook Secret</label>
+                            <input id="webhook-secret" type="text" placeholder="Optional shared secret" class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
+                            <p class="mt-3 text-xs text-slate-400">Recommended when your Telegram gateway is publicly reachable.</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <label class="text-sm font-bold text-slate-800">Target Chat IDs</label>
+                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">One per line</span>
+                        </div>
+                        <textarea id="chat-ids-text" rows="5" placeholder="-100123456789: Ops Team&#10;987654321: Owner" class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm text-slate-700 focus:border-slate-900 focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-8 grid gap-4 sm:grid-cols-2">
+                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Enable bot runtime</p>
+                                <p class="mt-1 text-sm text-slate-500">Bot can send messages and handle callbacks.</p>
+                            </div>
+                            <input id="is-active" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
+                        </div>
+                    </label>
+                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Enable notifications</p>
+                                <p class="mt-1 text-sm text-slate-500">Master switch for outbound bot alerts.</p>
+                            </div>
+                            <input id="notifications-enabled" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
+                        </div>
+                    </label>
+                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Notify on create</p>
+                                <p class="mt-1 text-sm text-slate-500">New supplier submission alert.</p>
+                            </div>
+                            <input id="notify-on-create" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
+                        </div>
+                    </label>
+                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Notify on status change</p>
+                                <p class="mt-1 text-sm text-slate-500">Dashboard and Telegram action updates.</p>
+                            </div>
+                            <input id="notify-on-status-change" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
+                        </div>
+                    </label>
+                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Notify on document upload</p>
+                                <p class="mt-1 text-sm text-slate-500">Alert when supporting files land in CRM.</p>
+                            </div>
+                            <input id="notify-on-document-upload" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
+                        </div>
+                    </label>
+                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Notify on export</p>
+                                <p class="mt-1 text-sm text-slate-500">Inform chat targets when reports are queued or ready.</p>
+                            </div>
+                            <input id="notify-on-export" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
+                        </div>
                     </label>
                 </div>
 
-                <!-- Actions Footer -->
-                <div class="pt-5 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <button 
-                        type="submit" 
-                        id="save-btn"
-                        class="w-full sm:w-auto flex justify-center py-3 px-6 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-500 hover:bg-primary-600 active:scale-95 focus:outline-none transition-all"
-                    >
+                <div class="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-sm text-slate-500">Changes are tenant-scoped and do not touch external VPS services outside this CRM app.</p>
+                    <button id="save-btn" type="submit" class="rounded-2xl bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-900">
                         Save Configuration
                     </button>
-                    <div id="loading-spinner" class="hidden flex items-center space-x-2 text-slate-400 text-sm font-semibold">
-                        <svg class="animate-spin h-5 w-5 text-primary-500" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Syncing...</span>
-                    </div>
                 </div>
             </form>
-        </div>
+
+            <section class="panel rounded-[2rem] p-6 lg:p-8">
+                <div class="mb-6">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Live Readout</p>
+                    <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">Connection summary</h3>
+                </div>
+                <div class="space-y-4" id="live-summary"></div>
+            </section>
+        </section>
     </main>
 
-    <!-- Script Logic -->
     <script>
         const API_URL = '/api/v1';
-        
-        axios.interceptors.request.use(config => {
+        let botConfig = null;
+        let sessionPayload = null;
+
+        axios.interceptors.request.use((config) => {
             const token = localStorage.getItem('token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
@@ -199,8 +269,8 @@
         });
 
         axios.interceptors.response.use(
-            response => response,
-            error => {
+            (response) => response,
+            (error) => {
                 if (error.response && error.response.status === 401) {
                     localStorage.removeItem('token');
                     window.location.href = '/login.html';
@@ -208,8 +278,6 @@
                 return Promise.reject(error);
             }
         );
-
-        let botConfig = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
@@ -219,10 +287,11 @@
             }
 
             try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                document.getElementById('user-display-name').innerText = `Workspace: ${payload.display_name || payload.email}`;
-            } catch (e) {
-                console.error("JWT parse error", e);
+                sessionPayload = JSON.parse(atob(token.split('.')[1]));
+                document.getElementById('user-display-name').innerText = `Workspace: ${sessionPayload.display_name || sessionPayload.email}`;
+                document.getElementById('suggested-webhook').innerText = `${window.location.origin}/api/v1/webhook/${sessionPayload.tenant_id || 'tenant-id'}`;
+            } catch (error) {
+                console.error('JWT parse error', error);
             }
 
             lucide.createIcons();
@@ -235,9 +304,9 @@
                 const res = await axios.get(`${API_URL}/bot-config`);
                 botConfig = res.data.data;
                 populateForm(botConfig);
-            } catch (err) {
-                console.error("Failed to fetch bot config", err);
-                showToast("Failed to load bot configuration.", "error");
+            } catch (error) {
+                console.error('Failed to fetch config', error);
+                showToast('Failed to load bot configuration.', 'error');
             } finally {
                 setLoading(false);
             }
@@ -246,145 +315,146 @@
         function setLoading(isLoading) {
             const spinner = document.getElementById('loading-spinner');
             const saveBtn = document.getElementById('save-btn');
-            
-            if (isLoading) {
-                spinner.classList.remove('hidden');
-                saveBtn.disabled = true;
-            } else {
-                spinner.classList.add('hidden');
-                saveBtn.disabled = false;
-            }
+            spinner.classList.toggle('hidden', !isLoading);
+            spinner.classList.toggle('flex', isLoading);
+            saveBtn.disabled = isLoading;
         }
 
         function populateForm(data) {
-            if (!data) return;
+            if (!data) {
+                return;
+            }
 
-            // Populate bot panel if active bot exists
-            const panel = document.getElementById('bot-identity-panel');
-            const title = document.getElementById('bot-username-title');
-            const hint = document.getElementById('bot-hint-desc');
-            const placeholderNote = document.getElementById('token-placeholder-note');
             const tokenInput = document.getElementById('bot-token');
+            const tokenNote = document.getElementById('token-placeholder-note');
 
             if (data.has_token) {
-                panel.classList.remove('hidden');
-                title.innerText = `Bot Active: @${data.bot_username || 'Unknown'}`;
-                hint.innerText = `Token: ending in ${data.bot_token_hint}`;
-                placeholderNote.classList.remove('hidden');
-                tokenInput.placeholder = "Leave blank to keep existing token";
+                tokenInput.placeholder = 'Leave blank to keep existing token';
+                tokenNote.classList.remove('hidden');
             } else {
-                panel.classList.add('hidden');
-                placeholderNote.classList.add('hidden');
-                tokenInput.placeholder = "1234567890:AAH...";
+                tokenInput.placeholder = '1234567890:AA...';
+                tokenNote.classList.add('hidden');
             }
 
-            // Populate webhook
             document.getElementById('webhook-url').value = data.webhook_url || '';
-            
-            // Populate webhook status badge
-            const badge = document.getElementById('webhook-badge');
-            if (data.webhook_is_set) {
-                badge.innerText = "Registered ✓";
-                badge.className = "text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg";
-            } else {
-                badge.innerText = "Not Registered";
-                badge.className = "text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg";
-            }
-
-            // Populate Target Chat IDs text area
-            const chatText = (data.chat_ids || []).map(c => `${c.chat_id}:${c.label}`).join('\n');
-            document.getElementById('chat-ids-text').value = chatText;
-
-            // Populate checkbox
+            document.getElementById('webhook-secret').value = '';
+            document.getElementById('chat-ids-text').value = (data.chat_ids || []).map((item) => `${item.chat_id}:${item.label}`).join('\n');
             document.getElementById('notifications-enabled').checked = data.notifications_enabled;
+            document.getElementById('notify-on-create').checked = data.notify_on_create;
+            document.getElementById('notify-on-status-change').checked = data.notify_on_status_change;
+            document.getElementById('notify-on-document-upload').checked = data.notify_on_document_upload;
+            document.getElementById('notify-on-export').checked = data.notify_on_export;
+            document.getElementById('is-active').checked = data.is_active;
+
+            document.getElementById('bot-identity-card').innerText = data.bot_username ? `@${data.bot_username}` : 'Not connected';
+            document.getElementById('webhook-state-card').innerText = data.webhook_is_set ? 'Registered' : 'Not registered';
+            document.getElementById('notifications-state-card').innerText = data.notifications_enabled ? 'Enabled' : 'Disabled';
+            document.getElementById('targets-state-card').innerText = `${(data.chat_ids || []).length} chats`;
+            document.getElementById('last-error-note').innerText = data.last_error || 'No bot errors recorded.';
+
+            renderLiveSummary(data);
         }
 
-        async function saveConfiguration(e) {
-            e.preventDefault();
+        function renderLiveSummary(data) {
+            document.getElementById('live-summary').innerHTML = `
+                ${renderReadoutCard('Bot Username', data.bot_username ? `@${escapeHtml(data.bot_username)}` : 'Not connected')}
+                ${renderReadoutCard('Webhook URL', data.webhook_url ? escapeHtml(data.webhook_url) : 'Not configured')}
+                ${renderReadoutCard('Token hint', data.bot_token_hint || 'No token saved')}
+                ${renderReadoutCard('Last verified', data.last_verified_at ? formatDateTime(data.last_verified_at) : 'Never')}
+                ${renderReadoutCard('Notification routing', `${(data.chat_ids || []).filter((item) => item.is_active !== false).length} active chats`)}
+            `;
+        }
+
+        function renderReadoutCard(label, value) {
+            return `
+                <article class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">${label}</p>
+                    <p class="mt-3 break-words text-sm font-bold text-slate-900">${value}</p>
+                </article>
+            `;
+        }
+
+        async function saveConfiguration(event) {
+            event.preventDefault();
             setLoading(true);
 
             try {
-                // Parse Chat IDs text
-                const chatIdsText = document.getElementById('chat-ids-text').value;
-                const chat_ids = chatIdsText
-                    .split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line)
-                    .map(line => {
-                        const parts = line.split(':');
-                        return {
-                            chat_id: parts[0].trim(),
-                            label: parts[1] ? parts[1].trim() : 'Default'
-                        };
-                    });
-
-                const botToken = document.getElementById('bot-token').value.trim();
-                const webhookUrl = document.getElementById('webhook-url').value.trim();
-                const notificationsEnabled = document.getElementById('notifications-enabled').checked;
-
                 const payload = {
-                    webhook_url: webhookUrl || null,
-                    chat_ids: chat_ids,
-                    notifications_enabled: notificationsEnabled
+                    webhook_url: document.getElementById('webhook-url').value.trim() || null,
+                    webhook_secret: document.getElementById('webhook-secret').value.trim() || null,
+                    chat_ids: parseChatIds(),
+                    notifications_enabled: document.getElementById('notifications-enabled').checked,
+                    notify_on_create: document.getElementById('notify-on-create').checked,
+                    notify_on_status_change: document.getElementById('notify-on-status-change').checked,
+                    notify_on_document_upload: document.getElementById('notify-on-document-upload').checked,
+                    notify_on_export: document.getElementById('notify-on-export').checked,
+                    is_active: document.getElementById('is-active').checked,
                 };
 
-                if (botToken) {
-                    payload.bot_token = botToken;
+                const tokenValue = document.getElementById('bot-token').value.trim();
+                if (tokenValue) {
+                    payload.bot_token = tokenValue;
                 }
 
                 const res = await axios.put(`${API_URL}/bot-config`, payload);
                 botConfig = res.data.data;
-                
-                showToast("Configuration saved successfully!", "success");
-                
-                // Clear token input field after success saving
                 document.getElementById('bot-token').value = '';
-                
                 populateForm(botConfig);
-            } catch (err) {
-                console.error("Save config failed", err);
-                showToast(err.response?.data?.message || "Failed to save configuration.", "error");
+                showToast('Telegram configuration saved.', 'success');
+            } catch (error) {
+                console.error('Failed to save config', error);
+                showToast(error.response?.data?.message || 'Failed to save configuration.', 'error');
             } finally {
                 setLoading(false);
             }
         }
 
+        function parseChatIds() {
+            return document.getElementById('chat-ids-text').value
+                .split('\n')
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .map((line) => {
+                    const [chatId, ...labelParts] = line.split(':');
+                    return {
+                        chat_id: chatId.trim(),
+                        label: (labelParts.join(':').trim() || 'Default'),
+                        is_active: true,
+                    };
+                });
+        }
+
         async function sendTestMessage() {
             const btn = document.getElementById('test-btn');
             btn.disabled = true;
-            btn.innerText = "Sending...";
-
+            btn.innerText = 'Sending...';
             try {
                 const res = await axios.post(`${API_URL}/bot-config/test`, {});
-                if (res.data.success) {
-                    showToast("Test message sent successfully!", "success");
-                } else {
-                    showToast(res.data.message || "Failed to send test message.", "error");
-                }
-            } catch (err) {
-                console.error("Test send failed", err);
-                showToast("Failed to run connection test.", "error");
+                const result = res.data.data;
+                showToast(result.message || 'Telegram test finished.', result.success ? 'success' : 'error');
+            } catch (error) {
+                console.error('Failed to send test', error);
+                showToast('Failed to run bot test.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Send Test Message";
+                btn.innerText = 'Send Test';
             }
         }
 
         async function registerWebhook() {
             const btn = document.getElementById('webhook-btn');
             btn.disabled = true;
-            btn.innerText = "Registering...";
-
+            btn.innerText = 'Registering...';
             try {
                 const res = await axios.post(`${API_URL}/bot-config/webhook`, {});
-                showToast(res.data.message || "Webhook set successfully!", "success");
-                fetchConfig(); // Reload to update UI badges
-            } catch (err) {
-                console.error("Webhook registration failed", err);
-                showToast(err.response?.data?.message || "Failed to register webhook with Telegram.", "error");
+                showToast(res.data.message || 'Webhook registered.', 'success');
+                await fetchConfig();
+            } catch (error) {
+                console.error('Failed to register webhook', error);
+                showToast(error.response?.data?.message || 'Failed to register webhook.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Register Webhook";
+                btn.innerText = 'Register Webhook';
             }
         }
 
@@ -393,43 +463,38 @@
             window.location.href = '/login.html';
         }
 
+        function formatDateTime(value) {
+            if (!value) {
+                return '-';
+            }
+            return new Date(value).toLocaleString();
+        }
+
         function showToast(message, type = 'success') {
             const existing = document.getElementById('floating-toast');
-            if (existing) existing.remove();
+            if (existing) {
+                existing.remove();
+            }
 
             const toast = document.createElement('div');
             toast.id = 'floating-toast';
-            
-            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600';
-            const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
-            
-            toast.className = `fixed bottom-5 right-5 z-50 flex items-center gap-3 text-white px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-10 opacity-0 ${bgColor} border border-white/10`;
-            toast.innerHTML = `
-                <i data-lucide="${iconName}" class="h-5 w-5"></i>
-                <span class="text-sm font-semibold">${message}</span>
-            `;
-            
+            toast.className = `fixed bottom-5 right-5 z-50 rounded-2xl px-5 py-4 text-sm font-bold text-white shadow-2xl ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
+            toast.innerText = message;
             document.body.appendChild(toast);
-            lucide.createIcons();
 
-            setTimeout(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            setTimeout(() => toast.remove(), 3500);
         }
 
         function escapeHtml(str) {
-            if (!str) return '';
+            if (str === null || str === undefined) {
+                return '';
+            }
             return str.toString()
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
     </script>
 </body>

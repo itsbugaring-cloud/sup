@@ -6,7 +6,7 @@
     <title>Supplier CRM - Dashboard</title>
     
     <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -94,7 +94,7 @@
                 <button 
                     id="export-btn"
                     onclick="handleExport()"
-                    class="inline-flex items-center justify-center px-5  py-3 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all disabled:opacity-50"
+                    class="inline-flex items-center justify-center px-5 py-3 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 focus:outline-none transition-all disabled:opacity-50"
                 >
                     <i data-lucide="file-spreadsheet" class="mr-2 h-4 w-4"></i>
                     <span id="export-btn-text">Export to Excel</span>
@@ -146,121 +146,200 @@
             </div>
         </div>
 
-        <!-- Main Data Directory Table Card -->
-        <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
-            <!-- Table Action Header -->
-            <div class="px-6 py-5 bg-white/70 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-4">
-                <div class="flex items-center space-x-2">
-                    <i data-lucide="folder-search" class="text-slate-400 h-5 w-5"></i>
-                    <h2 class="text-lg font-bold text-slate-800">Supplier Directory</h2>
-                </div>
-                
-                <!-- Filters Form -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center w-full lg:w-auto gap-3">
-                    <!-- Status Filter -->
-                    <select 
-                        id="status-filter" 
-                        onchange="handleFilterChange()"
-                        class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                        <option value="">All Statuses</option>
-                        <option value="draft">Draft</option>
-                        <option value="pending_review">Pending Review</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="blacklisted">Blacklisted</option>
-                    </select>
-
-                    <!-- Search Box -->
-                    <div class="relative flex-grow min-w-[240px]">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <i data-lucide="search" class="h-4 w-4 text-slate-400"></i>
+        <!-- Two-Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Directory Table (Span 2) -->
+            <div class="lg:col-span-2 space-y-8">
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <!-- Table Action Header -->
+                    <div class="px-6 py-5 bg-white/70 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="folder-search" class="text-slate-400 h-5 w-5"></i>
+                            <h2 class="text-lg font-bold text-slate-800">Supplier Directory</h2>
                         </div>
-                        <input
-                            type="text"
-                            id="search-input"
-                            class="bg-white border border-slate-200 block w-full pl-10 pr-4 py-2.5 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            placeholder="Search name, NPWP, city..."
-                            onkeyup="handleSearchKeyUp(event)"
-                        />
+                        
+                        <!-- Filters Form -->
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center w-full md:w-auto gap-3">
+                            <!-- Status Filter -->
+                            <select 
+                                id="status-filter" 
+                                onchange="handleFilterChange()"
+                                class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            >
+                                <option value="">All Statuses</option>
+                                <option value="draft">Draft</option>
+                                <option value="pending_review">Pending Review</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="blacklisted">Blacklisted</option>
+                            </select>
+
+                            <!-- Search Box -->
+                            <div class="relative flex-grow min-w-[200px]">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <i data-lucide="search" class="h-4 w-4 text-slate-400"></i>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="search-input"
+                                    class="bg-white border border-slate-200 block w-full pl-10 pr-4 py-2.5 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    placeholder="Search name, NPWP..."
+                                    onkeyup="handleSearchKeyUp(event)"
+                                />
+                            </div>
+
+                            <!-- Search Button -->
+                            <button 
+                                onclick="executeSearch()"
+                                class="bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl active:scale-95 transition-all shadow-md"
+                            >
+                                Search
+                            </button>
+                            
+                            <!-- Reset/Refresh Button -->
+                            <button 
+                                onclick="resetFilters()"
+                                title="Refresh & Reset Filters"
+                                class="border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 p-2.5 rounded-xl transition-all active:scale-95"
+                            >
+                                <i data-lucide="refresh-cw" class="h-4.5 w-4.5"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Search Button -->
-                    <button 
-                        onclick="executeSearch()"
-                        class="bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl active:scale-95 transition-all shadow-md"
-                    >
-                        Search
-                    </button>
-                    
-                    <!-- Reset/Refresh Button -->
-                    <button 
-                        onclick="resetFilters()"
-                        title="Refresh & Reset Filters"
-                        class="border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 p-2.5 rounded-xl transition-all active:scale-95"
-                    >
-                        <i data-lucide="refresh-cw" class="h-4.5 w-4.5"></i>
-                    </button>
+                    <!-- Table Responsive Wrapper -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-100">
+                            <thead class="bg-slate-50/50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</th>
+                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">PIC Info</th>
+                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</th>
+                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Source</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supplier-tbody" class="bg-white divide-y divide-slate-100">
+                                <!-- Content will be dynamically populated here -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- Loading Skeleton -->
+                        <div id="table-skeleton" class="hidden">
+                            <div class="divide-y divide-slate-100">
+                                <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
+                                <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
+                                <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination Panel -->
+                    <div class="bg-white px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div id="pagination-info" class="text-sm text-slate-500 font-medium">
+                            Showing <span class="font-semibold text-slate-900">-</span> to <span class="font-semibold text-slate-900">-</span> of <span class="font-semibold text-slate-900">-</span> results
+                        </div>
+                        <div class="flex space-x-2.5">
+                            <button 
+                                id="prev-btn"
+                                onclick="changePage(-1)"
+                                disabled
+                                class="relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                id="next-btn"
+                                onclick="changePage(1)"
+                                disabled
+                                class="relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Table Responsive Wrapper -->
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-100">
-                    <thead class="bg-slate-50/50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">PIC Info</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</th>
-                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-6 py-3.5 class text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Source</th>
-                        </tr>
-                    </thead>
-                    <tbody id="supplier-tbody" class="bg-white divide-y divide-slate-100">
-                        <!-- Content will be dynamically populated here -->
-                    </tbody>
-                </table>
+            <!-- Right Column: Operations Panel (Span 1) -->
+            <div class="space-y-8">
                 
-                <!-- Loading Skeleton -->
-                <div id="table-skeleton" class="hidden">
-                    <div class="divide-y divide-slate-100">
-                        <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
-                        <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
-                        <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
+                <!-- Telegram Bot Health Panel -->
+                <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="send" class="text-blue-500 h-5 w-5"></i>
+                            <h2 class="text-lg font-bold text-slate-800">Telegram Bot</h2>
+                        </div>
+                        <span id="bot-status-badge" class="px-2.5 py-0.5 text-xs font-bold rounded-full border">-</span>
+                    </div>
+                    
+                    <div class="border-t border-slate-100 pt-4 space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Bot Username</span>
+                            <span id="bot-username" class="font-semibold text-slate-800">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Webhook Status</span>
+                            <span id="bot-webhook" class="font-semibold">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Active Chat Groups</span>
+                            <span id="bot-chats" class="font-semibold text-slate-800">-</span>
+                        </div>
+                        <div id="bot-error-row" class="hidden flex-col bg-rose-50 border border-rose-100 rounded-xl p-3 text-rose-800 text-xs">
+                            <span class="font-bold">Last Bot Error:</span>
+                            <p id="bot-error" class="mt-1 font-mono break-all"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-slate-100 pt-4 flex gap-3">
+                        <button 
+                            id="bot-test-btn"
+                            onclick="sendTestMessage()"
+                            class="flex-1 text-center py-2 px-3 border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl active:scale-95 transition-all"
+                        >
+                            Test Telegram
+                        </button>
+                        <a 
+                            href="/bot-config.html"
+                            class="flex-1 text-center py-2 px-3 bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all shadow-sm"
+                        >
+                            Bot Setup
+                        </a>
                     </div>
                 </div>
+
+                <!-- Pending Review Desk -->
+                <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="clock" class="text-amber-500 h-5 w-5"></i>
+                        <h2 class="text-lg font-bold text-slate-800">Pending Review Desk</h2>
+                    </div>
+                    <div id="pending-list" class="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+                        <!-- Pending supplier items populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Recent Activity Stream -->
+                <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="activity" class="text-slate-500 h-5 w-5"></i>
+                        <h2 class="text-lg font-bold text-slate-800">Recent Activity</h2>
+                    </div>
+                    <div id="activity-stream" class="space-y-4 max-h-[350px] overflow-y-auto pr-1">
+                        <!-- Activity timeline items populated dynamically -->
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Pagination Panel -->
-            <div class="bg-white px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div id="pagination-info" class="text-sm text-slate-500 font-medium">
-                    Showing <span class="font-semibold text-slate-900">-</span> to <span class="font-semibold text-slate-900">-</span> of <span class="font-semibold text-slate-900">-</span> results
-                </div>
-                <div class="flex space-x-2.5">
-                    <button 
-                        id="prev-btn"
-                        onclick="changePage(-1)"
-                        disabled
-                        class="relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                    >
-                        Previous
-                    </button>
-                    <button 
-                        id="next-btn"
-                        onclick="changePage(1)"
-                        disabled
-                        class="relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                    >
-                        Next
-                    </button>
-                </div>
-            </div>
         </div>
     </main>
 
     <!-- JavaScript Logic -->
     <script>
-        // Setup API defaults and interceptors
         const API_URL = '/api/v1';
         
         axios.interceptors.request.use(config => {
@@ -282,7 +361,6 @@
             }
         );
 
-        // State management variables
         let currentPage = 1;
         let totalPages = 1;
         let searchQuery = '';
@@ -290,7 +368,6 @@
         let exporting = false;
         let pollInterval = null;
 
-        // Initialize App on DOM load
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -298,7 +375,6 @@
                 return;
             }
 
-            // Extract username from jwt payload for display
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 document.getElementById('user-display-name').innerText = `Workspace: ${payload.display_name || payload.email}`;
@@ -318,8 +394,8 @@
         async function fetchDashboardData() {
             showLoading(true);
             try {
-                const [statsRes, listRes] = await Promise.all([
-                    axios.get(`${API_URL}/suppliers/stats`),
+                const [overviewRes, listRes] = await Promise.all([
+                    axios.get(`${API_URL}/dashboard/overview`),
                     axios.get(`${API_URL}/suppliers`, {
                         params: {
                             page: currentPage,
@@ -329,7 +405,12 @@
                     })
                 ]);
                 
-                renderStats(statsRes.data.data);
+                const overview = overviewRes.data.data;
+                renderStats(overview.stats);
+                renderPendingDesk(overview.pending_suppliers);
+                renderActivityStream(overview.recent_activity);
+                renderTelegramPanel(overview.telegram);
+                
                 renderSuppliers(listRes.data.data, listRes.data.meta);
             } catch (err) {
                 console.error("Failed to load dashboard data", err);
@@ -357,6 +438,150 @@
             document.getElementById('stat-pending').innerText = stats.by_status?.pending_review || 0;
             document.getElementById('stat-approved').innerText = stats.by_status?.approved || 0;
             document.getElementById('stat-blacklisted').innerText = stats.by_status?.blacklisted || 0;
+        }
+
+        function renderPendingDesk(pending) {
+            const container = document.getElementById('pending-list');
+            container.innerHTML = '';
+            
+            if (!pending || pending.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 font-medium">
+                        <i data-lucide="check-circle-2" class="h-8 w-8 mx-auto text-emerald-500 mb-2"></i>
+                        All caught up! No pending reviews.
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            pending.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-3';
+                item.innerHTML = `
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">${escapeHtml(s.company_name)}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">PIC: ${escapeHtml(s.pic_name)} (${escapeHtml(s.pic_phone)})</div>
+                    </div>
+                    <div class="flex items-center gap-2 pt-1 border-t border-slate-200/40">
+                        <button 
+                            onclick="updateSupplierStatus('${s.id}', 'approved')" 
+                            class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg active:scale-95 transition-all shadow-sm"
+                        >
+                            Approve
+                        </button>
+                        <button 
+                            onclick="updateSupplierStatus('${s.id}', 'rejected')" 
+                            class="flex-1 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-lg active:scale-95 transition-all border border-rose-200"
+                        >
+                            Reject
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        async function updateSupplierStatus(supplierId, newStatus) {
+            try {
+                await axios.patch(`${API_URL}/suppliers/${supplierId}/status`, {
+                    status: newStatus,
+                    notes: `Status updated to ${newStatus} from Web Dashboard Overview.`
+                });
+                showToast(`Supplier status updated to ${newStatus.toUpperCase()}`, "success");
+                await fetchDashboardData();
+            } catch (err) {
+                console.error("Failed to update status", err);
+                showToast("Failed to update status.", "error");
+            }
+        }
+
+        function renderActivityStream(logs) {
+            const container = document.getElementById('activity-stream');
+            container.innerHTML = '';
+            
+            if (!logs || logs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No recent activity logs.</p>`;
+                return;
+            }
+
+            logs.forEach(log => {
+                const dateStr = formatDateTime(log.created_at);
+                const item = document.createElement('div');
+                item.className = 'relative pl-5 pb-4 last:pb-0 border-l border-slate-200 last:border-0';
+                item.innerHTML = `
+                    <span class="absolute left-0 top-1.5 -translate-x-1/2 w-2 h-2 rounded-full bg-slate-400 border-2 border-white"></span>
+                    <div class="space-y-0.5">
+                        <div class="flex items-center justify-between text-2xs">
+                            <span class="font-bold text-slate-700 text-xs">${escapeHtml(log.actor_display_name || 'System')}</span>
+                            <span class="text-slate-400 text-2xs font-mono">${dateStr}</span>
+                        </div>
+                        <p class="text-xs text-slate-500">${escapeHtml(getActionText(log))}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function getActionText(log) {
+            const entity = log.entity_type === 'suppliers' ? 'supplier' : log.entity_type;
+            const action = log.action.replace('_', ' ').toLowerCase();
+            return `${action} ${entity} (ID: ${log.entity_id.substring(0, 8)}...)`;
+        }
+
+        function renderTelegramPanel(tg) {
+            if (!tg) return;
+
+            const badge = document.getElementById('bot-status-badge');
+            if (tg.is_active) {
+                badge.innerText = "ACTIVE";
+                badge.className = "px-2.5 py-0.5 text-xs font-bold rounded-full bg-green-50 text-green-700 border-green-200 border";
+            } else {
+                badge.innerText = "INACTIVE";
+                badge.className = "px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-500 border-slate-200 border";
+            }
+
+            document.getElementById('bot-username').innerText = tg.bot_username ? `@${tg.bot_username}` : 'Not configured';
+            
+            const webhook = document.getElementById('bot-webhook');
+            if (tg.webhook_is_set) {
+                webhook.innerText = "Registered ✓";
+                webhook.className = "font-semibold text-green-600";
+            } else {
+                webhook.innerText = "Not Registered";
+                webhook.className = "font-semibold text-rose-500";
+            }
+
+            document.getElementById('bot-chats').innerText = `${tg.chat_count} active chat(s)`;
+
+            const errorRow = document.getElementById('bot-error-row');
+            if (tg.last_error) {
+                errorRow.classList.remove('hidden');
+                document.getElementById('bot-error').innerText = tg.last_error;
+            } else {
+                errorRow.classList.add('hidden');
+            }
+        }
+
+        async function sendTestMessage() {
+            const btn = document.getElementById('bot-test-btn');
+            btn.disabled = true;
+            btn.innerText = "Sending...";
+
+            try {
+                const res = await axios.post(`${API_URL}/bot-config/test`, {});
+                if (res.data.success) {
+                    showToast("Test message triggered on Telegram!", "success");
+                } else {
+                    showToast(res.data.message || "Failed to trigger test message.", "error");
+                }
+            } catch (err) {
+                console.error("Test send failed", err);
+                showToast("Failed to connect to Telegram server.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Test Telegram";
+            }
         }
 
         function renderSuppliers(suppliers, meta) {
@@ -496,7 +721,6 @@
                     responseType: 'blob'
                 });
 
-                // Check if response is actually a JSON status descriptor or file blob
                 if (res.data.type === 'application/json') {
                     const text = await res.data.text();
                     const json = JSON.parse(text);
@@ -507,19 +731,14 @@
                         pollExportTask(json.task_id);
                     }
                 } else {
-                    // Sync direct file download
                     downloadFileBlob(res.data, res.headers);
                     showToast("Export completed successfully!", "success");
-                    btn.disabled = false;
-                    btnText.innerText = 'Export to Excel';
-                    exporting = false;
+                    resetExportButton();
                 }
             } catch (err) {
                 console.error("Export request failed", err);
                 showToast("Export request failed. Try again.", "error");
-                btn.disabled = false;
-                btnText.innerText = 'Export to Excel';
-                exporting = false;
+                resetExportButton();
             }
         }
 
@@ -533,11 +752,8 @@
                     
                     if (status === 'completed') {
                         clearInterval(pollInterval);
-                        
-                        // Download output file via completed presigned URL
                         window.location.href = res.data.data.download_url;
                         showToast("Export download triggered!", "success");
-                        
                         resetExportButton();
                     } else if (status === 'failed' || status === 'not_found') {
                         clearInterval(pollInterval);
@@ -583,6 +799,12 @@
         function handleLogout() {
             localStorage.removeItem('token');
             window.location.href = '/login.html';
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            return date.toLocaleString('id-ID', { hour12: false });
         }
 
         function showToast(message, type = 'success') {

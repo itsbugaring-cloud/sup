@@ -25,6 +25,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from app.core.dependencies import (
     AdminUser,
     AuditRepo,
+    BotConfigRepo,
     CurrentUser,
     DbSession,
     DocRepo,
@@ -44,6 +45,7 @@ from app.schemas.supplier import (
 )
 from app.services.minio_service import MinIOService
 from app.services.supplier_service import SupplierService
+from app.services.telegram_notifier import TelegramNotifier
 
 from fastapi_cache.decorator import cache
 
@@ -130,6 +132,7 @@ async def create_supplier(
     current_user: CurrentUser,
     supplier_repo: SupplierRepo,
     audit_repo: AuditRepo,
+    bot_repo: BotConfigRepo,
     doc_repo: DocRepo,
 ) -> SuccessResponse[SupplierRead]:
     svc = _get_service(supplier_repo, audit_repo, doc_repo)
@@ -141,6 +144,7 @@ async def create_supplier(
         request_id=get_request_id(request),
         ip_address=get_client_ip(request),
     )
+    await TelegramNotifier(bot_repo).send_supplier_created(result)
     return SuccessResponse(data=result, message="Supplier created successfully")
 
 
@@ -202,6 +206,7 @@ async def update_status(
     current_user: CurrentUser,
     supplier_repo: SupplierRepo,
     audit_repo: AuditRepo,
+    bot_repo: BotConfigRepo,
     doc_repo: DocRepo,
 ) -> SuccessResponse[SupplierRead]:
     svc = _get_service(supplier_repo, audit_repo, doc_repo)
@@ -210,8 +215,14 @@ async def update_status(
         data=body,
         actor_id=current_user.id,
         actor_display_name=current_user.display_name,
+        actor_type=AuditActorType.WEB_USER,
         request_id=get_request_id(request),
         ip_address=get_client_ip(request),
+    )
+    await TelegramNotifier(bot_repo).send_status_change(
+        result,
+        actor_display_name=current_user.display_name or current_user.email,
+        source="Dashboard",
     )
     return SuccessResponse(data=result, message="Status updated")
 

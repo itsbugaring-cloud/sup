@@ -269,6 +269,7 @@ class SupplierService:
         data: SupplierStatusUpdate,
         actor_id: str,
         actor_display_name: str | None = None,
+        actor_type: AuditActorType = AuditActorType.WEB_USER,
         request_id: str | None = None,
         ip_address: str | None = None,
     ) -> SupplierRead:
@@ -284,7 +285,7 @@ class SupplierService:
         await self._write_audit(
             action=AuditAction.UPDATE,
             entity_id=str(supplier_id),
-            actor_type=AuditActorType.WEB_USER,
+            actor_type=actor_type,
             actor_id=actor_id,
             actor_display_name=actor_display_name,
             before=before_snapshot,

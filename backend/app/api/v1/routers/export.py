@@ -23,7 +23,15 @@ from fastapi import APIRouter, Request, Response, status
 from fastapi.responses import StreamingResponse
 
 from app.core.config import settings
-from app.core.dependencies import AuditRepo, CurrentUser, DocRepo, SupplierRepo, get_client_ip, get_request_id
+from app.core.dependencies import (
+    AuditRepo,
+    BotConfigRepo,
+    CurrentUser,
+    DocRepo,
+    SupplierRepo,
+    get_client_ip,
+    get_request_id,
+)
 from app.core.logging import get_logger
 from app.models.audit_log import AuditAction, AuditActorType
 from app.schemas.audit_log import AuditLogCreate
@@ -31,6 +39,7 @@ from app.schemas.common import SuccessResponse, TaskResponse
 from app.schemas.supplier import SupplierFilter
 from app.services.export_service import generate_supplier_excel
 from app.services.minio_service import MinIOService
+from app.services.telegram_notifier import TelegramNotifier
 from app.worker import get_arq_redis_settings
 
 logger = get_logger(__name__)
@@ -54,6 +63,7 @@ async def export_suppliers(
     current_user: CurrentUser,
     supplier_repo: SupplierRepo,
     audit_repo: AuditRepo,
+    bot_repo: BotConfigRepo,
     doc_repo: DocRepo,
     # Accept same filters as the list endpoint
     search: str | None = None,
@@ -99,6 +109,11 @@ async def export_suppliers(
         filename = f"supplier_export_{timestamp}.xlsx"
 
         logger.info("sync_export_completed", rows=total, actor=current_user.id)
+        await TelegramNotifier(bot_repo).send_export_event(
+            total_rows=total,
+            actor_display_name=current_user.display_name or current_user.email,
+            mode="completed",
+        )
 
         return Response(
             content=xlsx_bytes,
@@ -118,6 +133,8 @@ async def export_suppliers(
             "export_suppliers_job",
             filters.model_dump(mode="json"),
             current_user.id,
+            current_user.tenant_id,
+            current_user.display_name or current_user.email,
             task_id,
         )
     finally:
@@ -128,6 +145,12 @@ async def export_suppliers(
         task_id=task_id,
         estimated_rows=total,
         actor=current_user.id,
+    )
+    await TelegramNotifier(bot_repo).send_export_event(
+        total_rows=total,
+        actor_display_name=current_user.display_name or current_user.email,
+        mode="queued",
+        task_id=task_id,
     )
 
     return Response(
