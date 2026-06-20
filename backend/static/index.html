@@ -3,361 +3,1296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supplier CRM - Dashboard</title>
-    
-    <!-- Google Fonts: Inter -->
+    <title>Supplier CRM — Dashboard</title>
+    <meta name="description" content="Enterprise supplier management dashboard. Monitor, approve, and manage all company suppliers in one place.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: {
-                            50: '#f0f4f8',
-                            100: '#dbe3ed',
-                            500: '#1E3A5F',
-                            600: '#152b47',
-                            700: '#0d1d30',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    
+
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --brand: #4f8ef7;
+            --brand-dark: #2563eb;
+            --accent: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+
+            --bg: #070c18;
+            --surface: #0d1525;
+            --surface-2: #111827;
+            --surface-3: #1a2235;
+            --border: rgba(255,255,255,0.06);
+            --border-subtle: rgba(255,255,255,0.04);
+            --border-hover: rgba(255,255,255,0.12);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #4b5a72;
+            --text-accent: #93c5fd;
+
+            --nav-h: 64px;
+            --sidebar-w: 240px;
+        }
+
+        html { font-size: 14px; }
+
         body {
-            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
+
+        /* TOPBAR */
+        .topbar {
+            height: var(--nav-h);
+            background: rgba(7,12,24,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            gap: 1.5rem;
         }
-        .shimmer {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .topbar-logo {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--brand), var(--accent));
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(79,142,247,0.3);
+        }
+
+        .topbar-logo svg { width: 18px; height: 18px; color: #fff; }
+
+        .topbar-brand-name {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+        }
+
+        .topbar-brand-name span {
+            color: var(--brand);
+        }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-left: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-link svg { width: 15px; height: 15px; }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: rgba(79,142,247,0.12);
+            color: var(--brand);
+        }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .workspace-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.875rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .workspace-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--success);
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.875rem;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px;
+            color: #fca5a5;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-logout svg { width: 13px; height: 13px; }
+
+        .btn-logout:hover {
+            background: rgba(239,68,68,0.15);
+            border-color: rgba(239,68,68,0.35);
+            color: #fecaca;
+        }
+
+        /* PAGE LAYOUT */
+        .page-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.75rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .page-title-area h1 {
+            font-size: 1.625rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .page-title-area .subtitle {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-top: 0.375rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .page-title-area .subtitle .dot {
+            width: 4px;
+            height: 4px;
+            background: var(--text-muted);
+            border-radius: 50%;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.125rem;
+            background: linear-gradient(135deg, #059669, #047857);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+        }
+
+        .btn-export svg { width: 15px; height: 15px; }
+
+        .btn-export:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(5,150,105,0.4);
+        }
+
+        .btn-export:active { transform: scale(0.97); }
+
+        .btn-export:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem 1.375rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-card.blue::before { background: linear-gradient(90deg, var(--brand), transparent); }
+        .stat-card.amber::before { background: linear-gradient(90deg, var(--warning), transparent); }
+        .stat-card.green::before { background: linear-gradient(90deg, var(--success), transparent); }
+        .stat-card.red::before { background: linear-gradient(90deg, var(--danger), transparent); }
+
+        .stat-card-inner {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 0.625rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+        }
+
+        .stat-value.blue { color: #93c5fd; }
+        .stat-value.amber { color: #fcd34d; }
+        .stat-value.green { color: #6ee7b7; }
+        .stat-value.red { color: #fca5a5; }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon svg { width: 18px; height: 18px; }
+
+        .stat-icon.blue { background: rgba(79,142,247,0.12); color: var(--brand); }
+        .stat-icon.amber { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .stat-icon.green { background: rgba(16,185,129,0.12); color: var(--success); }
+        .stat-icon.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+        /* MAIN GRID */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* PANEL */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.125rem 1.375rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .panel-title svg {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+
+        /* FILTER BAR */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 1rem 1.375rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .filter-select, .search-input {
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text-primary);
+            font-size: 0.8125rem;
+            font-family: 'Inter', sans-serif;
+            padding: 0.5rem 0.875rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select { min-width: 150px; cursor: pointer; }
+        .filter-select option { background: #1a2235; }
+
+        .filter-select:focus, .search-input:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 2px rgba(79,142,247,0.15);
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-wrapper svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px; height: 14px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding-left: 2.25rem;
+        }
+
+        .search-input::placeholder { color: var(--text-muted); }
+
+        .btn-search, .btn-reset {
+            padding: 0.5rem 0.875rem;
+            border-radius: 9px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .btn-search svg, .btn-reset svg { width: 13px; height: 13px; }
+
+        .btn-search {
+            background: var(--brand);
+            border: none;
+            color: #fff;
+        }
+
+        .btn-search:hover { background: var(--brand-dark); }
+
+        .btn-reset {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .btn-reset:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+            border-color: var(--border-hover);
+        }
+
+        /* TABLE */
+        .table-wrapper { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 0.75rem 1.125rem;
+            text-align: left;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            background: rgba(0,0,0,0.25);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-top: 1px solid var(--border-subtle);
+            transition: background 0.15s ease;
+            cursor: default;
+        }
+
+        tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+        tbody td {
+            padding: 0.9375rem 1.125rem;
+            font-size: 0.8125rem;
+            vertical-align: middle;
+        }
+
+        .cell-company-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .cell-mono {
+            font-family: 'Inter', monospace;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            margin-top: 0.2rem;
+        }
+
+        .cell-sub {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 0.2rem;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.625rem;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .badge-draft { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+        .badge-draft::before { background: #94a3b8; }
+
+        .badge-pending { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.2); }
+        .badge-pending::before { background: #fcd34d; animation: blink 1.5s ease-in-out infinite; }
+
+        .badge-approved { background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.2); }
+        .badge-approved::before { background: #6ee7b7; }
+
+        .badge-rejected { background: rgba(239,68,68,0.10); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+        .badge-rejected::before { background: #fca5a5; }
+
+        .badge-blacklisted { background: rgba(15,23,42,0.8); color: #cbd5e1; border: 1px solid rgba(71,85,105,0.4); }
+        .badge-blacklisted::before { background: #64748b; }
+
+        /* Source badge */
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 8px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+        }
+
+        .source-badge svg { width: 11px; height: 11px; }
+
+        .source-tg { background: rgba(6,182,212,0.1); color: var(--info); border: 1px solid rgba(6,182,212,0.2); }
+        .source-web { background: rgba(100,116,139,0.1); color: #94a3b8; border: 1px solid rgba(100,116,139,0.15); }
+
+        /* Empty State */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state .icon-wrap {
+            width: 56px;
+            height: 56px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .empty-state .icon-wrap svg { width: 24px; height: 24px; color: var(--text-muted); }
+
+        .empty-state p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Skeleton loader */
+        .skeleton-row {
+            padding: 1rem 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .skeleton-block {
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
             background-size: 200% 100%;
-            animation: shimmer-anim 1.5s infinite;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
         }
-        @keyframes shimmer-anim {
+
+        @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
+
+        /* Pagination */
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1.375rem;
+            border-top: 1px solid var(--border);
+            background: rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .pagination-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .pagination-info strong { color: var(--text-secondary); }
+
+        .pagination-btns { display: flex; gap: 0.5rem; }
+
+        .btn-page {
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background: rgba(79,142,247,0.1);
+            border-color: rgba(79,142,247,0.3);
+            color: var(--brand);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* RIGHT COLUMN */
+        .right-col { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        /* Telegram Panel */
+        .tg-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .status-pill::before {
+            content: '';
+            width: 5px; height: 5px;
+            border-radius: 50%;
+        }
+
+        .status-pill.active { background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.2); }
+        .status-pill.active::before { background: #6ee7b7; animation: blink 2s ease-in-out infinite; }
+
+        .status-pill.inactive { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+        .status-pill.inactive::before { background: #64748b; }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            padding: 1rem 1.375rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+        .info-label { color: var(--text-muted); }
+        .info-value { font-weight: 600; color: var(--text-secondary); }
+        .info-value.success { color: #6ee7b7; }
+        .info-value.warn { color: #fca5a5; }
+
+        .tg-actions {
+            display: flex;
+            gap: 0.625rem;
+            padding: 1rem 1.375rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-tg-test {
+            flex: 1;
+            padding: 0.55rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-tg-test:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-tg-config {
+            flex: 1;
+            padding: 0.55rem;
+            background: rgba(79,142,247,0.12);
+            border: 1px solid rgba(79,142,247,0.25);
+            border-radius: 9px;
+            color: var(--brand);
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+            transition: all 0.2s ease;
+        }
+
+        .btn-tg-config:hover {
+            background: rgba(79,142,247,0.2);
+        }
+
+        /* Pending items */
+        .pending-item {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.875rem;
+        }
+
+        .pending-item-name {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .pending-item-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .pending-item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-approve, .btn-reject {
+            flex: 1;
+            padding: 0.4rem;
+            border-radius: 7px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-approve {
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.25);
+            color: #6ee7b7;
+        }
+
+        .btn-approve:hover {
+            background: rgba(16,185,129,0.2);
+        }
+
+        .btn-reject {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            color: #fca5a5;
+        }
+
+        .btn-reject:hover {
+            background: rgba(239,68,68,0.15);
+        }
+
+        /* Activity stream */
+        .activity-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0 1.375rem;
+            position: relative;
+        }
+
+        .activity-item + .activity-item {
+            margin-top: 0.875rem;
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            border: 2px solid var(--surface);
+            flex-shrink: 0;
+            margin-top: 0.3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .activity-line {
+            position: absolute;
+            left: calc(1.375rem + 3px);
+            top: 12px;
+            bottom: -0.875rem;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .activity-item:last-child .activity-line { display: none; }
+
+        .activity-content {}
+
+        .activity-actor {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .activity-action {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.125rem;
+            line-height: 1.4;
+        }
+
+        .activity-time {
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-family: 'Inter', monospace;
+        }
+
+        .scrollable-list {
+            padding: 1rem 0;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .scrollable-list::-webkit-scrollbar { width: 4px; }
+        .scrollable-list::-webkit-scrollbar-track { background: transparent; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+        .pending-list-inner {
+            padding: 1rem 1.375rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .pending-list-inner::-webkit-scrollbar { width: 4px; }
+        .pending-list-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.25rem;
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            font-size: 0.875rem;
+            font-weight: 600;
+            max-width: 380px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .toast.success {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #6ee7b7;
+        }
+
+        .toast.error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+        }
+
+        /* BOT ERROR BOX */
+        .bot-error-box {
+            margin: 0 1.375rem 1rem;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 9px;
+            padding: 0.75rem;
+            display: none;
+        }
+
+        .bot-error-box.visible { display: block; }
+
+        .bot-error-box .label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: #fca5a5;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .bot-error-box .msg {
+            font-size: 0.75rem;
+            font-family: monospace;
+            color: #fca5a5;
+            word-break: break-all;
+            line-height: 1.4;
+            opacity: 0.8;
+        }
+
+        .panel-content-pad {
+            padding: 1.125rem 1.375rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .topbar-nav { display: none; }
+            .main-content { padding: 1rem; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
-    <!-- Navbar -->
-    <nav class="bg-primary-500 text-white shadow-lg sticky top-0 z-40 border-b border-primary-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center space-x-8">
-                    <span class="font-bold text-xl tracking-wide flex items-center gap-2.5">
-                        <i data-lucide="building-2" class="h-6 w-6 text-blue-300"></i> CRM Supplier
-                    </span>
-                    <div class="hidden sm:flex space-x-3">
-                        <a href="/" class="bg-white/10 text-white px-3.5 py-2 rounded-xl text-sm font-semibold tracking-wide shadow-inner">Dashboard</a>
-                        <a href="/bot-config.html" class="text-blue-100 hover:text-white hover:bg-white/5 px-3.5 py-2 rounded-xl text-sm font-medium tracking-wide transition-all">Bot Config</a>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span id="user-display-name" class="text-sm font-medium text-blue-100 hidden md:block bg-primary-600 px-3 py-1.5 rounded-xl border border-primary-700"></span>
-                    <button onclick="handleLogout()" class="text-sm font-semibold bg-red-600/90 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-all shadow-md active:scale-95">
-                        Logout
-                    </button>
-                </div>
+<body>
+
+    <!-- TOPBAR -->
+    <nav class="topbar">
+        <a href="/" class="topbar-brand">
+            <div class="topbar-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>
+            <span class="topbar-brand-name">Supplier<span>CRM</span></span>
+        </a>
+
+        <nav class="topbar-nav">
+            <a href="/" class="nav-link active" id="nav-dashboard">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Dashboard
+            </a>
+            <a href="/bot-config.html" class="nav-link" id="nav-botconfig">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9A16 16 0 0 0 13 13.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 14.72"/></svg>
+                Bot Config
+            </a>
+        </nav>
+
+        <div class="topbar-right">
+            <div class="workspace-badge" id="user-display-name">Loading...</div>
+            <button onclick="handleLogout()" class="btn-logout">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Logout
+            </button>
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        <!-- Header & Action Section -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Overview</h1>
-                <p class="text-sm text-slate-500 mt-1">Manage, filter, and monitor all company registered suppliers.</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button 
-                    id="export-btn"
-                    onclick="handleExport()"
-                    class="inline-flex items-center justify-center px-5 py-3 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 focus:outline-none transition-all disabled:opacity-50"
-                >
-                    <i data-lucide="file-spreadsheet" class="mr-2 h-4 w-4"></i>
-                    <span id="export-btn-text">Export to Excel</span>
-                </button>
-            </div>
-        </div>
+    <div class="page-body">
+        <main class="main-content">
 
-        <!-- Stats Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Stat 1 -->
-            <div class="glass-card rounded-2xl p-6 flex items-center justify-between transition-all hover:-translate-y-1 hover:shadow-lg duration-300">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-slate-500">Total Suppliers</p>
-                    <p id="stat-total" class="text-3xl font-bold text-slate-900">-</p>
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div class="page-title-area">
+                    <h1>Dashboard Overview</h1>
+                    <div class="subtitle">
+                        <span id="greeting-text">Good morning</span>
+                        <span class="dot"></span>
+                        <span id="date-text"></span>
+                    </div>
                 </div>
-                <div class="p-3.5 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100">
-                    <i data-lucide="users" class="h-6 w-6"></i>
-                </div>
-            </div>
-            <!-- Stat 2 -->
-            <div class="glass-card rounded-2xl p-6 flex items-center justify-between transition-all hover:-translate-y-1 hover:shadow-lg duration-300">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-slate-500">Pending Review</p>
-                    <p id="stat-pending" class="text-3xl font-bold text-amber-600">-</p>
-                </div>
-                <div class="p-3.5 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100">
-                    <i data-lucide="clock" class="h-6 w-6"></i>
+                <div class="page-actions">
+                    <button id="export-btn" onclick="handleExport()" class="btn-export">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span id="export-btn-text">Export Excel</span>
+                    </button>
                 </div>
             </div>
-            <!-- Stat 3 -->
-            <div class="glass-card rounded-2xl p-6 flex items-center justify-between transition-all hover:-translate-y-1 hover:shadow-lg duration-300">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-slate-500">Approved</p>
-                    <p id="stat-approved" class="text-3xl font-bold text-emerald-600">-</p>
-                </div>
-                <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100">
-                    <i data-lucide="check-circle" class="h-6 w-6"></i>
-                </div>
-            </div>
-            <!-- Stat 4 -->
-            <div class="glass-card rounded-2xl p-6 flex items-center justify-between transition-all hover:-translate-y-1 hover:shadow-lg duration-300">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-slate-500">Blacklisted</p>
-                    <p id="stat-blacklisted" class="text-3xl font-bold text-rose-600">-</p>
-                </div>
-                <div class="p-3.5 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100">
-                    <i data-lucide="alert-octagon" class="h-6 w-6"></i>
-                </div>
-            </div>
-        </div>
 
-        <!-- Two-Column Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- Left Column: Directory Table (Span 2) -->
-            <div class="lg:col-span-2 space-y-8">
-                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
-                    <!-- Table Action Header -->
-                    <div class="px-6 py-5 bg-white/70 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="folder-search" class="text-slate-400 h-5 w-5"></i>
-                            <h2 class="text-lg font-bold text-slate-800">Supplier Directory</h2>
+            <!-- STATS GRID -->
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-label">Total Suppliers</div>
+                            <div class="stat-value blue" id="stat-total">—</div>
                         </div>
-                        
-                        <!-- Filters Form -->
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center w-full md:w-auto gap-3">
-                            <!-- Status Filter -->
-                            <select 
-                                id="status-filter" 
-                                onchange="handleFilterChange()"
-                                class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="draft">Draft</option>
-                                <option value="pending_review">Pending Review</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                                <option value="blacklisted">Blacklisted</option>
-                            </select>
+                        <div class="stat-icon blue">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-label">Pending Review</div>
+                            <div class="stat-value amber" id="stat-pending">—</div>
+                        </div>
+                        <div class="stat-icon amber">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-label">Approved</div>
+                            <div class="stat-value green" id="stat-approved">—</div>
+                        </div>
+                        <div class="stat-icon green">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-card-inner">
+                        <div>
+                            <div class="stat-label">Blacklisted</div>
+                            <div class="stat-value red" id="stat-blacklisted">—</div>
+                        </div>
+                        <div class="stat-icon red">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            <!-- Search Box -->
-                            <div class="relative flex-grow min-w-[200px]">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                    <i data-lucide="search" class="h-4 w-4 text-slate-400"></i>
-                                </div>
-                                <input
-                                    type="text"
-                                    id="search-input"
-                                    class="bg-white border border-slate-200 block w-full pl-10 pr-4 py-2.5 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                    placeholder="Search name, NPWP..."
-                                    onkeyup="handleSearchKeyUp(event)"
-                                />
-                            </div>
+            <!-- MAIN GRID -->
+            <div class="main-grid">
 
-                            <!-- Search Button -->
-                            <button 
-                                onclick="executeSearch()"
-                                class="bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl active:scale-95 transition-all shadow-md"
-                            >
-                                Search
-                            </button>
-                            
-                            <!-- Reset/Refresh Button -->
-                            <button 
-                                onclick="resetFilters()"
-                                title="Refresh & Reset Filters"
-                                class="border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 p-2.5 rounded-xl transition-all active:scale-95"
-                            >
-                                <i data-lucide="refresh-cw" class="h-4.5 w-4.5"></i>
-                            </button>
+                <!-- LEFT: Supplier Table -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Supplier Directory
                         </div>
                     </div>
 
-                    <!-- Table Responsive Wrapper -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-100">
-                            <thead class="bg-slate-50/50">
+                    <!-- Filter Bar -->
+                    <div class="filter-bar">
+                        <select id="status-filter" class="filter-select" onchange="handleFilterChange()">
+                            <option value="">All Statuses</option>
+                            <option value="draft">Draft</option>
+                            <option value="pending_review">Pending Review</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="blacklisted">Blacklisted</option>
+                        </select>
+
+                        <div class="search-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="search-input" class="search-input" placeholder="Search company, NPWP..." onkeyup="handleSearchKeyUp(event)">
+                        </div>
+
+                        <button onclick="executeSearch()" class="btn-search">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Search
+                        </button>
+
+                        <button onclick="resetFilters()" class="btn-reset" title="Reset filters">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</th>
-                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">PIC Info</th>
-                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</th>
-                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Source</th>
+                                    <th>Company</th>
+                                    <th>PIC Info</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Source</th>
                                 </tr>
                             </thead>
-                            <tbody id="supplier-tbody" class="bg-white divide-y divide-slate-100">
-                                <!-- Content will be dynamically populated here -->
-                            </tbody>
+                            <tbody id="supplier-tbody"></tbody>
                         </table>
-                        
-                        <!-- Loading Skeleton -->
+
+                        <!-- Loading skeleton -->
                         <div id="table-skeleton" class="hidden">
-                            <div class="divide-y divide-slate-100">
-                                <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
-                                <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
-                                <div class="px-6 py-5 flex items-center justify-between shimmer h-16 w-full opacity-65 mb-1 rounded-sm"></div>
+                            <div class="skeleton-row">
+                                <div class="skeleton-block" style="height:36px;flex:2;"></div>
+                                <div class="skeleton-block" style="height:36px;flex:1.5;"></div>
+                                <div class="skeleton-block" style="height:36px;flex:1;"></div>
+                                <div class="skeleton-block" style="height:24px;width:80px;"></div>
+                                <div class="skeleton-block" style="height:24px;width:70px;"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="skeleton-block" style="height:36px;flex:2;"></div>
+                                <div class="skeleton-block" style="height:36px;flex:1.5;"></div>
+                                <div class="skeleton-block" style="height:36px;flex:1;"></div>
+                                <div class="skeleton-block" style="height:24px;width:80px;"></div>
+                                <div class="skeleton-block" style="height:24px;width:70px;"></div>
+                            </div>
+                            <div class="skeleton-row">
+                                <div class="skeleton-block" style="height:36px;flex:2;"></div>
+                                <div class="skeleton-block" style="height:36px;flex:1.5;"></div>
+                                <div class="skeleton-block" style="height:36px;flex:1;"></div>
+                                <div class="skeleton-block" style="height:24px;width:80px;"></div>
+                                <div class="skeleton-block" style="height:24px;width:70px;"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Pagination Panel -->
-                    <div class="bg-white px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div id="pagination-info" class="text-sm text-slate-500 font-medium">
-                            Showing <span class="font-semibold text-slate-900">-</span> to <span class="font-semibold text-slate-900">-</span> of <span class="font-semibold text-slate-900">-</span> results
-                        </div>
-                        <div class="flex space-x-2.5">
-                            <button 
-                                id="prev-btn"
-                                onclick="changePage(-1)"
-                                disabled
-                                class="relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                            >
-                                Previous
-                            </button>
-                            <button 
-                                id="next-btn"
-                                onclick="changePage(1)"
-                                disabled
-                                class="relative inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-semibold rounded-xl text-slate-700 bg-white hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                            >
-                                Next
-                            </button>
+                    <!-- Pagination -->
+                    <div class="pagination-bar">
+                        <div class="pagination-info" id="pagination-info">Showing — results</div>
+                        <div class="pagination-btns">
+                            <button id="prev-btn" class="btn-page" onclick="changePage(-1)" disabled>← Prev</button>
+                            <button id="next-btn" class="btn-page" onclick="changePage(1)" disabled>Next →</button>
                         </div>
                     </div>
+                </div>
+
+                <!-- RIGHT COLUMN -->
+                <div class="right-col">
+
+                    <!-- Telegram Bot Panel -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="tg-panel-header" style="width:100%;">
+                                <div class="panel-title">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                    Telegram Bot
+                                </div>
+                                <span id="bot-status-badge" class="status-pill inactive">—</span>
+                            </div>
+                        </div>
+
+                        <div class="info-list">
+                            <div class="info-row">
+                                <span class="info-label">Bot Username</span>
+                                <span id="bot-username" class="info-value">—</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Webhook</span>
+                                <span id="bot-webhook" class="info-value">—</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Active Chats</span>
+                                <span id="bot-chats" class="info-value">—</span>
+                            </div>
+                        </div>
+
+                        <div id="bot-error-row" class="bot-error-box">
+                            <div class="label">Last Bot Error</div>
+                            <div id="bot-error" class="msg"></div>
+                        </div>
+
+                        <div class="tg-actions">
+                            <button id="bot-test-btn" onclick="sendTestMessage()" class="btn-tg-test">Send Test</button>
+                            <a href="/bot-config.html" class="btn-tg-config">⚙ Configure</a>
+                        </div>
+                    </div>
+
+                    <!-- Pending Review Desk -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Pending Review
+                            </div>
+                        </div>
+                        <div class="pending-list-inner" id="pending-list">
+                            <!-- filled by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                Recent Activity
+                            </div>
+                        </div>
+                        <div class="scrollable-list" id="activity-stream">
+                            <!-- filled by JS -->
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Right Column: Operations Panel (Span 1) -->
-            <div class="space-y-8">
-                
-                <!-- Telegram Bot Health Panel -->
-                <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="send" class="text-blue-500 h-5 w-5"></i>
-                            <h2 class="text-lg font-bold text-slate-800">Telegram Bot</h2>
-                        </div>
-                        <span id="bot-status-badge" class="px-2.5 py-0.5 text-xs font-bold rounded-full border">-</span>
-                    </div>
-                    
-                    <div class="border-t border-slate-100 pt-4 space-y-3 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Bot Username</span>
-                            <span id="bot-username" class="font-semibold text-slate-800">-</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Webhook Status</span>
-                            <span id="bot-webhook" class="font-semibold">-</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Active Chat Groups</span>
-                            <span id="bot-chats" class="font-semibold text-slate-800">-</span>
-                        </div>
-                        <div id="bot-error-row" class="hidden flex-col bg-rose-50 border border-rose-100 rounded-xl p-3 text-rose-800 text-xs">
-                            <span class="font-bold">Last Bot Error:</span>
-                            <p id="bot-error" class="mt-1 font-mono break-all"></p>
-                        </div>
-                    </div>
-                    
-                    <div class="border-t border-slate-100 pt-4 flex gap-3">
-                        <button 
-                            id="bot-test-btn"
-                            onclick="sendTestMessage()"
-                            class="flex-1 text-center py-2 px-3 border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl active:scale-95 transition-all"
-                        >
-                            Test Telegram
-                        </button>
-                        <a 
-                            href="/bot-config.html"
-                            class="flex-1 text-center py-2 px-3 bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all shadow-sm"
-                        >
-                            Bot Setup
-                        </a>
-                    </div>
-                </div>
+        </main>
+    </div>
 
-                <!-- Pending Review Desk -->
-                <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
-                    <div class="flex items-center space-x-2">
-                        <i data-lucide="clock" class="text-amber-500 h-5 w-5"></i>
-                        <h2 class="text-lg font-bold text-slate-800">Pending Review Desk</h2>
-                    </div>
-                    <div id="pending-list" class="space-y-4 max-h-[300px] overflow-y-auto pr-1">
-                        <!-- Pending supplier items populated dynamically -->
-                    </div>
-                </div>
+    <!-- Toast -->
+    <div id="floating-toast" class="toast"></div>
 
-                <!-- Recent Activity Stream -->
-                <div class="glass-card rounded-2xl p-6 shadow-sm space-y-4">
-                    <div class="flex items-center space-x-2">
-                        <i data-lucide="activity" class="text-slate-500 h-5 w-5"></i>
-                        <h2 class="text-lg font-bold text-slate-800">Recent Activity</h2>
-                    </div>
-                    <div id="activity-stream" class="space-y-4 max-h-[350px] overflow-y-auto pr-1">
-                        <!-- Activity timeline items populated dynamically -->
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </main>
-
-    <!-- JavaScript Logic -->
     <script>
         const API_URL = '/api/v1';
-        
+
         axios.interceptors.request.use(config => {
             const token = localStorage.getItem('token');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+            if (token) config.headers.Authorization = `Bearer ${token}`;
             return config;
         });
 
         axios.interceptors.response.use(
-            response => response,
-            error => {
-                if (error.response && error.response.status === 401) {
+            res => res,
+            err => {
+                if (err.response?.status === 401) {
                     localStorage.removeItem('token');
                     window.location.href = '/login.html';
                 }
-                return Promise.reject(error);
+                return Promise.reject(err);
             }
         );
 
@@ -370,19 +1305,28 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
-            }
+            if (!token) { window.location.href = '/login.html'; return; }
 
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                document.getElementById('user-display-name').innerText = `Workspace: ${payload.display_name || payload.email}`;
-            } catch (e) {
-                console.error("JWT parse error", e);
-            }
+                document.getElementById('user-display-name').textContent = payload.display_name || payload.email;
+                if (payload.is_superadmin) {
+                    const navEl = document.querySelector('.topbar-nav');
+                    const adminLink = document.createElement('a');
+                    adminLink.href = '/saas-admin.html';
+                    adminLink.className = 'nav-link';
+                    adminLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin Panel`;
+                    navEl.appendChild(adminLink);
+                }
+            } catch(e) {}
 
-            lucide.createIcons();
+            // Date / greeting
+            const now = new Date();
+            const h = now.getHours();
+            const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+            document.getElementById('greeting-text').textContent = greet;
+            document.getElementById('date-text').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
             initDashboard();
         });
 
@@ -397,136 +1341,122 @@
                 const [overviewRes, listRes] = await Promise.all([
                     axios.get(`${API_URL}/dashboard/overview`),
                     axios.get(`${API_URL}/suppliers`, {
-                        params: {
-                            page: currentPage,
-                            search: searchQuery || undefined,
-                            status: statusFilter || undefined
-                        }
+                        params: { page: currentPage, search: searchQuery || undefined, status: statusFilter || undefined }
                     })
                 ]);
-                
+
                 const overview = overviewRes.data.data;
                 renderStats(overview.stats);
                 renderPendingDesk(overview.pending_suppliers);
                 renderActivityStream(overview.recent_activity);
                 renderTelegramPanel(overview.telegram);
-                
                 renderSuppliers(listRes.data.data, listRes.data.meta);
-            } catch (err) {
-                console.error("Failed to load dashboard data", err);
-                showToast("Failed to load dashboard data. Please try again.", "error");
+            } catch(err) {
+                console.error(err);
+                showToast('Failed to load dashboard data.', 'error');
             } finally {
                 showLoading(false);
             }
         }
 
-        function showLoading(isLoading) {
-            const skeleton = document.getElementById('table-skeleton');
-            const tbody = document.getElementById('supplier-tbody');
-            
-            if (isLoading) {
-                skeleton.classList.remove('hidden');
-                tbody.innerHTML = '';
-            } else {
-                skeleton.classList.add('hidden');
-            }
+        function showLoading(on) {
+            document.getElementById('table-skeleton').style.display = on ? 'block' : 'none';
+            document.getElementById('supplier-tbody').innerHTML = on ? '' : document.getElementById('supplier-tbody').innerHTML;
         }
 
         function renderStats(stats) {
             if (!stats) return;
-            document.getElementById('stat-total').innerText = stats.total_active || 0;
-            document.getElementById('stat-pending').innerText = stats.by_status?.pending_review || 0;
-            document.getElementById('stat-approved').innerText = stats.by_status?.approved || 0;
-            document.getElementById('stat-blacklisted').innerText = stats.by_status?.blacklisted || 0;
+            animateCount('stat-total', stats.total_active || 0);
+            animateCount('stat-pending', stats.by_status?.pending_review || 0);
+            animateCount('stat-approved', stats.by_status?.approved || 0);
+            animateCount('stat-blacklisted', stats.by_status?.blacklisted || 0);
+        }
+
+        function animateCount(id, target) {
+            const el = document.getElementById(id);
+            const start = parseInt(el.textContent) || 0;
+            const duration = 600;
+            const startTime = performance.now();
+            const update = (time) => {
+                const progress = Math.min((time - startTime) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(start + (target - start) * ease);
+                if (progress < 1) requestAnimationFrame(update);
+            };
+            requestAnimationFrame(update);
         }
 
         function renderPendingDesk(pending) {
             const container = document.getElementById('pending-list');
             container.innerHTML = '';
-            
+
             if (!pending || pending.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-8 text-slate-400 font-medium">
-                        <i data-lucide="check-circle-2" class="h-8 w-8 mx-auto text-emerald-500 mb-2"></i>
-                        All caught up! No pending reviews.
+                    <div style="text-align:center;padding:2rem 1rem;">
+                        <div style="width:40px;height:40px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <p style="font-size:0.8rem;color:var(--text-muted);">All caught up! No pending reviews.</p>
                     </div>
                 `;
-                lucide.createIcons();
                 return;
             }
 
             pending.forEach(s => {
-                const item = document.createElement('div');
-                item.className = 'bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-3';
-                item.innerHTML = `
-                    <div>
-                        <div class="text-sm font-bold text-slate-800">${escapeHtml(s.company_name)}</div>
-                        <div class="text-xs text-slate-500 mt-0.5">PIC: ${escapeHtml(s.pic_name)} (${escapeHtml(s.pic_phone)})</div>
-                    </div>
-                    <div class="flex items-center gap-2 pt-1 border-t border-slate-200/40">
-                        <button 
-                            onclick="updateSupplierStatus('${s.id}', 'approved')" 
-                            class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg active:scale-95 transition-all shadow-sm"
-                        >
-                            Approve
-                        </button>
-                        <button 
-                            onclick="updateSupplierStatus('${s.id}', 'rejected')" 
-                            class="flex-1 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-lg active:scale-95 transition-all border border-rose-200"
-                        >
-                            Reject
-                        </button>
+                const div = document.createElement('div');
+                div.className = 'pending-item';
+                div.innerHTML = `
+                    <div class="pending-item-name">${escapeHtml(s.company_name)}</div>
+                    <div class="pending-item-sub">PIC: ${escapeHtml(s.pic_name)} · ${escapeHtml(s.pic_phone)}</div>
+                    <div class="pending-item-actions">
+                        <button class="btn-approve" onclick="updateSupplierStatus('${s.id}', 'approved')">✓ Approve</button>
+                        <button class="btn-reject" onclick="updateSupplierStatus('${s.id}', 'rejected')">✕ Reject</button>
                     </div>
                 `;
-                container.appendChild(item);
+                container.appendChild(div);
             });
         }
 
-        async function updateSupplierStatus(supplierId, newStatus) {
+        async function updateSupplierStatus(id, status) {
             try {
-                await axios.patch(`${API_URL}/suppliers/${supplierId}/status`, {
-                    status: newStatus,
-                    notes: `Status updated to ${newStatus} from Web Dashboard Overview.`
+                await axios.patch(`${API_URL}/suppliers/${id}/status`, {
+                    status,
+                    notes: `Status updated to ${status} from Web Dashboard.`
                 });
-                showToast(`Supplier status updated to ${newStatus.toUpperCase()}`, "success");
+                showToast(`Supplier ${status} successfully.`, 'success');
                 await fetchDashboardData();
-            } catch (err) {
-                console.error("Failed to update status", err);
-                showToast("Failed to update status.", "error");
+            } catch(err) {
+                showToast('Failed to update supplier status.', 'error');
             }
         }
 
         function renderActivityStream(logs) {
             const container = document.getElementById('activity-stream');
             container.innerHTML = '';
-            
+
             if (!logs || logs.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No recent activity logs.</p>`;
+                container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.8rem;">No recent activity.</div>`;
                 return;
             }
 
-            logs.forEach(log => {
-                const dateStr = formatDateTime(log.created_at);
+            logs.forEach((log, i) => {
                 const item = document.createElement('div');
-                item.className = 'relative pl-5 pb-4 last:pb-0 border-l border-slate-200 last:border-0';
+                item.className = 'activity-item';
+                const action = log.action.replace(/_/g, ' ');
+                const entity = log.entity_type?.replace(/_/g, ' ') || '';
                 item.innerHTML = `
-                    <span class="absolute left-0 top-1.5 -translate-x-1/2 w-2 h-2 rounded-full bg-slate-400 border-2 border-white"></span>
-                    <div class="space-y-0.5">
-                        <div class="flex items-center justify-between text-2xs">
-                            <span class="font-bold text-slate-700 text-xs">${escapeHtml(log.actor_display_name || 'System')}</span>
-                            <span class="text-slate-400 text-2xs font-mono">${dateStr}</span>
-                        </div>
-                        <p class="text-xs text-slate-500">${escapeHtml(getActionText(log))}</p>
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                        <div class="activity-dot"></div>
+                        ${i < logs.length - 1 ? '<div class="activity-line"></div>' : ''}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-actor">${escapeHtml(log.actor_display_name || 'System')}</div>
+                        <div class="activity-action">${escapeHtml(action)} ${escapeHtml(entity)}</div>
+                        <div class="activity-time">${formatDateTime(log.created_at)}</div>
                     </div>
                 `;
                 container.appendChild(item);
             });
-        }
-
-        function getActionText(log) {
-            const entity = log.entity_type === 'suppliers' ? 'supplier' : log.entity_type;
-            const action = log.action.replace('_', ' ').toLowerCase();
-            return `${action} ${entity} (ID: ${log.entity_id.substring(0, 8)}...)`;
         }
 
         function renderTelegramPanel(tg) {
@@ -534,125 +1464,110 @@
 
             const badge = document.getElementById('bot-status-badge');
             if (tg.is_active) {
-                badge.innerText = "ACTIVE";
-                badge.className = "px-2.5 py-0.5 text-xs font-bold rounded-full bg-green-50 text-green-700 border-green-200 border";
+                badge.textContent = 'Active';
+                badge.className = 'status-pill active';
             } else {
-                badge.innerText = "INACTIVE";
-                badge.className = "px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-500 border-slate-200 border";
+                badge.textContent = 'Inactive';
+                badge.className = 'status-pill inactive';
             }
 
-            document.getElementById('bot-username').innerText = tg.bot_username ? `@${tg.bot_username}` : 'Not configured';
-            
-            const webhook = document.getElementById('bot-webhook');
+            document.getElementById('bot-username').textContent = tg.bot_username ? `@${tg.bot_username}` : '—';
+
+            const webhookEl = document.getElementById('bot-webhook');
             if (tg.webhook_is_set) {
-                webhook.innerText = "Registered ✓";
-                webhook.className = "font-semibold text-green-600";
+                webhookEl.textContent = 'Registered ✓';
+                webhookEl.className = 'info-value success';
             } else {
-                webhook.innerText = "Not Registered";
-                webhook.className = "font-semibold text-rose-500";
+                webhookEl.textContent = 'Not registered';
+                webhookEl.className = 'info-value warn';
             }
 
-            document.getElementById('bot-chats').innerText = `${tg.chat_count} active chat(s)`;
+            document.getElementById('bot-chats').textContent = `${tg.chat_count || 0} chat(s)`;
 
-            const errorRow = document.getElementById('bot-error-row');
+            const errBox = document.getElementById('bot-error-row');
             if (tg.last_error) {
-                errorRow.classList.remove('hidden');
-                document.getElementById('bot-error').innerText = tg.last_error;
+                errBox.classList.add('visible');
+                document.getElementById('bot-error').textContent = tg.last_error;
             } else {
-                errorRow.classList.add('hidden');
+                errBox.classList.remove('visible');
             }
         }
 
         async function sendTestMessage() {
             const btn = document.getElementById('bot-test-btn');
             btn.disabled = true;
-            btn.innerText = "Sending...";
-
+            btn.textContent = 'Sending...';
             try {
                 const res = await axios.post(`${API_URL}/bot-config/test`, {});
-                if (res.data.success) {
-                    showToast("Test message triggered on Telegram!", "success");
-                } else {
-                    showToast(res.data.message || "Failed to trigger test message.", "error");
-                }
-            } catch (err) {
-                console.error("Test send failed", err);
-                showToast("Failed to connect to Telegram server.", "error");
+                showToast(res.data.success ? 'Test message sent to Telegram!' : (res.data.message || 'Failed.'), res.data.success ? 'success' : 'error');
+            } catch(err) {
+                showToast('Failed to send test message.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Test Telegram";
+                btn.textContent = 'Send Test';
             }
         }
 
         function renderSuppliers(suppliers, meta) {
             const tbody = document.getElementById('supplier-tbody');
             tbody.innerHTML = '';
-            
+
             if (!suppliers || suppliers.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="px-6 py-16 text-center text-slate-500 font-medium">
-                            <i data-lucide="inbox" class="h-10 w-10 mx-auto text-slate-300 mb-2"></i>
-                            No suppliers registered under this filter.
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="icon-wrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                </div>
+                                <p>No suppliers found matching current filters.</p>
+                            </div>
                         </td>
                     </tr>
                 `;
                 updatePaginationControls(meta);
-                lucide.createIcons();
                 return;
             }
 
             suppliers.forEach(s => {
-                const statusBadge = getStatusBadgeHTML(s.status);
-                const sourceBadge = s.submitted_by_telegram_username 
-                    ? `<span class="inline-flex items-center text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 font-medium text-xs">
-                           <i data-lucide="send" class="h-3 w-3 mr-1"></i>
-                           @${escapeHtml(s.submitted_by_telegram_username)}
+                const badgeClass = {
+                    draft: 'badge-draft',
+                    pending_review: 'badge-pending',
+                    approved: 'badge-approved',
+                    rejected: 'badge-rejected',
+                    blacklisted: 'badge-blacklisted'
+                }[s.status] || 'badge-draft';
+
+                const label = (s.status || 'draft').replace('_', ' ').toUpperCase();
+
+                const sourceBadge = s.submitted_by_telegram_username
+                    ? `<span class="source-badge source-tg">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        @${escapeHtml(s.submitted_by_telegram_username)}
                        </span>`
-                    : `<span class="inline-flex items-center text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 font-medium text-xs">
-                           <i data-lucide="monitor" class="h-3 w-3 mr-1"></i>
-                           Web Dashboard
+                    : `<span class="source-badge source-web">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        Web
                        </span>`;
 
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50/60 transition-colors border-b border-slate-100';
                 tr.innerHTML = `
-                    <td class="px-6 py-4.5 whitespace-nowrap">
-                        <div class="text-sm font-semibold text-slate-900">${escapeHtml(s.company_name)}</div>
-                        <div class="text-xs text-slate-400 mt-0.5 font-mono">NPWP: ${escapeHtml(s.npwp_number || '-')}</div>
+                    <td>
+                        <div class="cell-company-name">${escapeHtml(s.company_name)}</div>
+                        <div class="cell-mono">NPWP: ${escapeHtml(s.npwp_number || '—')}</div>
                     </td>
-                    <td class="px-6 py-4.5 whitespace-nowrap">
-                        <div class="text-sm font-semibold text-slate-900">${escapeHtml(s.pic_name)}</div>
-                        <div class="text-xs text-slate-400 mt-0.5">${escapeHtml(s.pic_phone)}</div>
+                    <td>
+                        <div style="font-weight:600;color:var(--text-secondary);font-size:0.8125rem;">${escapeHtml(s.pic_name)}</div>
+                        <div class="cell-sub">${escapeHtml(s.pic_phone)}</div>
                     </td>
-                    <td class="px-6 py-4.5 whitespace-nowrap text-sm text-slate-600 font-medium">
-                        ${escapeHtml(s.city || '-')}, ${escapeHtml(s.province || '-')}
-                    </td>
-                    <td class="px-6 py-4.5 whitespace-nowrap">
-                        ${statusBadge}
-                    </td>
-                    <td class="px-6 py-4.5 whitespace-nowrap text-sm text-slate-500">
-                        ${sourceBadge}
-                    </td>
+                    <td style="color:var(--text-secondary);font-size:0.8125rem;">${escapeHtml(s.city || '—')}, ${escapeHtml(s.province || '—')}</td>
+                    <td><span class="badge ${badgeClass}">${label}</span></td>
+                    <td>${sourceBadge}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             updatePaginationControls(meta);
-            lucide.createIcons();
-        }
-
-        function getStatusBadgeHTML(status) {
-            const styles = {
-                'draft': 'bg-slate-50 text-slate-600 border-slate-200',
-                'pending_review': 'bg-amber-50 text-amber-800 border-amber-200',
-                'approved': 'bg-emerald-50 text-emerald-800 border-emerald-200',
-                'rejected': 'bg-rose-50 text-rose-800 border-rose-200',
-                'blacklisted': 'bg-slate-900 text-slate-100 border-slate-950',
-            };
-            const label = (status || 'draft').replace('_', ' ').toUpperCase();
-            const style = styles[status] || styles['draft'];
-            return `<span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full border ${style}">${label}</span>`;
         }
 
         function updatePaginationControls(meta) {
@@ -660,43 +1575,21 @@
             currentPage = meta.page;
             totalPages = meta.total_pages;
 
-            const startIdx = (meta.page - 1) * meta.per_page + (meta.total_items > 0 ? 1 : 0);
-            const endIdx = (meta.page - 1) * meta.per_page + (meta.total_items > 0 ? (meta.total_items - startIdx < meta.per_page ? meta.total_items : startIdx + meta.per_page - 1) : 0);
+            const start = (meta.page - 1) * meta.per_page + (meta.total_items > 0 ? 1 : 0);
+            const end = Math.min(meta.page * meta.per_page, meta.total_items);
 
             document.getElementById('pagination-info').innerHTML = `
-                Showing <span class="font-bold text-slate-800">${startIdx}</span> to <span class="font-bold text-slate-800">${endIdx}</span> of <span class="font-bold text-slate-800">${meta.total_items}</span> results
+                Showing <strong>${start}</strong>–<strong>${end}</strong> of <strong>${meta.total_items}</strong> results
             `;
 
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-
-            prevBtn.disabled = !meta.has_prev;
-            nextBtn.disabled = !meta.has_next;
+            document.getElementById('prev-btn').disabled = !meta.has_prev;
+            document.getElementById('next-btn').disabled = !meta.has_next;
         }
 
-        function changePage(direction) {
-            currentPage += direction;
-            fetchDashboardData();
-        }
-
-        function handleFilterChange() {
-            statusFilter = document.getElementById('status-filter').value;
-            currentPage = 1;
-            fetchDashboardData();
-        }
-
-        function handleSearchKeyUp(event) {
-            if (event.key === 'Enter') {
-                executeSearch();
-            }
-        }
-
-        function executeSearch() {
-            searchQuery = document.getElementById('search-input').value.trim();
-            currentPage = 1;
-            fetchDashboardData();
-        }
-
+        function changePage(dir) { currentPage += dir; fetchDashboardData(); }
+        function handleFilterChange() { statusFilter = document.getElementById('status-filter').value; currentPage = 1; fetchDashboardData(); }
+        function handleSearchKeyUp(e) { if (e.key === 'Enter') executeSearch(); }
+        function executeSearch() { searchQuery = document.getElementById('search-input').value.trim(); currentPage = 1; fetchDashboardData(); }
         function resetFilters() {
             document.getElementById('search-input').value = '';
             document.getElementById('status-filter').value = '';
@@ -708,71 +1601,60 @@
 
         async function handleExport() {
             if (exporting) return;
-            
             const btn = document.getElementById('export-btn');
-            const btnText = document.getElementById('export-btn-text');
-            
+            const txt = document.getElementById('export-btn-text');
             try {
                 exporting = true;
                 btn.disabled = true;
-                btnText.innerText = 'Requesting export...';
-                
-                const res = await axios.post(`${API_URL}/suppliers/export`, {}, {
-                    responseType: 'blob'
-                });
+                txt.textContent = 'Generating...';
+
+                const res = await axios.post(`${API_URL}/suppliers/export`, {}, { responseType: 'blob' });
 
                 if (res.data.type === 'application/json') {
-                    const text = await res.data.text();
-                    const json = JSON.parse(text);
-                    
+                    const json = JSON.parse(await res.data.text());
                     if (json.status === 'queued') {
-                        showToast(`Export task queued. Processing report...`, "success");
-                        btnText.innerText = 'Generating file...';
+                        showToast('Export queued, processing...', 'success');
+                        txt.textContent = 'Processing...';
                         pollExportTask(json.task_id);
                     }
                 } else {
                     downloadFileBlob(res.data, res.headers);
-                    showToast("Export completed successfully!", "success");
+                    showToast('Export downloaded!', 'success');
                     resetExportButton();
                 }
-            } catch (err) {
-                console.error("Export request failed", err);
-                showToast("Export request failed. Try again.", "error");
+            } catch(err) {
+                showToast('Export failed. Try again.', 'error');
                 resetExportButton();
             }
         }
 
         function pollExportTask(taskId) {
             if (pollInterval) clearInterval(pollInterval);
-            
             pollInterval = setInterval(async () => {
                 try {
                     const res = await axios.get(`${API_URL}/suppliers/export/${taskId}`);
                     const status = res.data.data.status;
-                    
                     if (status === 'completed') {
                         clearInterval(pollInterval);
                         window.location.href = res.data.data.download_url;
-                        showToast("Export download triggered!", "success");
+                        showToast('Export download started!', 'success');
                         resetExportButton();
                     } else if (status === 'failed' || status === 'not_found') {
                         clearInterval(pollInterval);
-                        showToast("Export generation failed on server.", "error");
+                        showToast('Export generation failed.', 'error');
                         resetExportButton();
                     }
-                } catch (e) {
+                } catch(e) {
                     clearInterval(pollInterval);
-                    showToast("Failed to verify export completion status.", "error");
+                    showToast('Export status check failed.', 'error');
                     resetExportButton();
                 }
             }, 3000);
         }
 
         function resetExportButton() {
-            const btn = document.getElementById('export-btn');
-            const btnText = document.getElementById('export-btn-text');
-            btn.disabled = false;
-            btnText.innerText = 'Export to Excel';
+            document.getElementById('export-btn').disabled = false;
+            document.getElementById('export-btn-text').textContent = 'Export Excel';
             exporting = false;
         }
 
@@ -780,16 +1662,12 @@
             const url = window.URL.createObjectURL(new Blob([blob]));
             const link = document.createElement('a');
             link.href = url;
-            
-            const disposition = headers['content-disposition'];
+            const disp = headers['content-disposition'];
             let filename = 'suppliers_export.xlsx';
-            if (disposition && disposition.includes('attachment')) {
-                const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-                if (matches != null && matches[1]) { 
-                    filename = matches[1].replace(/['"]/g, '');
-                }
+            if (disp && disp.includes('filename')) {
+                const m = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disp);
+                if (m?.[1]) filename = m[1].replace(/['"]/g, '');
             }
-            
             link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
@@ -802,48 +1680,39 @@
         }
 
         function formatDateTime(value) {
-            if (!value) return '-';
-            const date = new Date(value);
-            return date.toLocaleString('id-ID', { hour12: false });
+            if (!value) return '—';
+            return new Date(value).toLocaleString('id-ID', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
+        let toastTimer;
         function showToast(message, type = 'success') {
-            const existing = document.getElementById('floating-toast');
-            if (existing) existing.remove();
+            const toast = document.getElementById('floating-toast');
+            clearTimeout(toastTimer);
 
-            const toast = document.createElement('div');
-            toast.id = 'floating-toast';
-            
-            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600';
-            const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
-            
-            toast.className = `fixed bottom-5 right-5 z-50 flex items-center gap-3 text-white px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-10 opacity-0 ${bgColor} border border-white/10`;
-            toast.innerHTML = `
-                <i data-lucide="${iconName}" class="h-5 w-5"></i>
-                <span class="text-sm font-semibold">${message}</span>
-            `;
-            
-            document.body.appendChild(toast);
-            lucide.createIcons();
+            const icon = type === 'success'
+                ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+                : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
 
-            setTimeout(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            }, 10);
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `${icon}<span>${message}</span>`;
 
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('show'));
+            });
+
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
             }, 4000);
         }
 
         function escapeHtml(str) {
             if (!str) return '';
             return str.toString()
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+                .replace(/&/g,'&amp;')
+                .replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;')
+                .replace(/'/g,'&#039;');
         }
     </script>
 </body>

@@ -3,284 +3,1133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Super Admin - Supplier CRM</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SaaS Control Panel — Supplier CRM</title>
+    <meta name="description" content="Super Admin control panel for Supplier CRM SaaS. Manage all tenant workspaces and platform statistics.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --brand: #4f8ef7;
+            --brand-dark: #2563eb;
+            --accent: #7c3aed;
+            --accent-2: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+
+            --bg: #070c18;
+            --surface: #0d1525;
+            --surface-2: #111827;
+            --surface-3: #1a2235;
+            --border: rgba(255,255,255,0.06);
+            --border-subtle: rgba(255,255,255,0.04);
+            --border-hover: rgba(255,255,255,0.12);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #4b5a72;
+        }
+
+        html { font-size: 14px; }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
         }
-        .spinner {
-            border: 3px solid rgba(0,0,0,0.1);
-            width: 24px;
-            height: 24px;
+
+        /* Background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 10% 5%, rgba(124,58,237,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 90% 90%, rgba(79,142,247,0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            height: 64px;
+            background: rgba(7,12,24,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            gap: 1.25rem;
+            position: relative;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+        }
+
+        .logo-icon svg { width: 18px; height: 18px; color: #fff; }
+
+        .logo-text {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+        }
+
+        .superadmin-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            background: rgba(124,58,237,0.12);
+            border: 1px solid rgba(124,58,237,0.25);
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: #c4b5fd;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .superadmin-chip svg { width: 10px; height: 10px; }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .admin-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .admin-info strong {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .btn-back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4rem 0.75rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back-link svg { width: 13px; height: 13px; }
+
+        .btn-back-link:hover {
+            background: rgba(255,255,255,0.07);
+            color: var(--text-primary);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4rem 0.75rem;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px;
+            color: #fca5a5;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239,68,68,0.14);
+        }
+
+        /* HERO BANNER */
+        .hero-banner {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(79,142,247,0.08) 50%, rgba(236,72,153,0.06) 100%);
+            border-bottom: 1px solid rgba(124,58,237,0.15);
+            padding: 2rem 1.5rem;
+            overflow: hidden;
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.012'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-inner {
+            position: relative;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero-inner h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.375rem;
+        }
+
+        .hero-inner p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ERROR */
+        .error-banner {
+            display: none;
+            align-items: flex-start;
+            gap: 0.75rem;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .error-banner.visible { display: flex; }
+        .error-banner svg { width: 16px; height: 16px; color: var(--danger); flex-shrink: 0; margin-top: 2px; }
+        .error-banner p { font-size: 0.875rem; color: #fca5a5; }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem 1.375rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .stat-card-glow {
+            position: absolute;
+            bottom: -30px;
+            right: -20px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
-            border-left-color: #ffffff;
-            animation: spin 1s linear infinite;
+            filter: blur(30px);
+            opacity: 0.15;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .stat-card.blue .stat-card-glow { background: var(--brand); }
+        .stat-card.green .stat-card-glow { background: var(--success); }
+        .stat-card.purple .stat-card-glow { background: var(--purple); }
+        .stat-card.orange .stat-card-glow { background: var(--warning); }
+
+        .stat-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 0.625rem;
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+        }
+
+        .stat-value.blue { color: #93c5fd; }
+        .stat-value.green { color: #6ee7b7; }
+        .stat-value.purple { color: #c4b5fd; }
+        .stat-value.orange { color: #fcd34d; }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon svg { width: 20px; height: 20px; }
+
+        .stat-icon.blue { background: rgba(79,142,247,0.12); color: var(--brand); }
+        .stat-icon.green { background: rgba(16,185,129,0.12); color: var(--success); }
+        .stat-icon.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+        .stat-icon.orange { background: rgba(245,158,11,0.12); color: var(--warning); }
+
+        /* PANEL */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.125rem 1.375rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.15);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 0.9375rem;
+            font-weight: 700;
+        }
+
+        .panel-title svg { width: 16px; height: 16px; color: var(--text-muted); }
+
+        .btn-refresh {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4rem 0.75rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-refresh svg { width: 13px; height: 13px; }
+
+        .btn-refresh:hover {
+            background: rgba(255,255,255,0.04);
+            color: var(--text-secondary);
+            border-color: var(--border-hover);
+        }
+
+        .btn-refresh.spinning svg {
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* TABLE */
+        .table-wrapper { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 0.75rem 1.25rem;
+            text-align: left;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            white-space: nowrap;
+            background: rgba(0,0,0,0.2);
+        }
+
+        thead th:last-child { text-align: right; }
+
+        tbody tr {
+            border-top: 1px solid var(--border-subtle);
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        tbody td {
+            padding: 1rem 1.25rem;
+            font-size: 0.8125rem;
+            vertical-align: middle;
+        }
+
+        .company-name {
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .tenant-id {
+            font-family: monospace;
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .slug-pill {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .date-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .actions-cell { text-align: right; }
+
+        /* Status badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.625rem;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .badge-active {
+            background: rgba(16,185,129,0.12);
+            color: #6ee7b7;
+            border: 1px solid rgba(16,185,129,0.2);
+        }
+
+        .badge-active::before { background: #6ee7b7; animation: pulse-dot 2s ease-in-out infinite; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .badge-suspended {
+            background: rgba(239,68,68,0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .badge-suspended::before { background: #fca5a5; }
+
+        /* Action buttons */
+        .btn-suspend {
+            padding: 0.375rem 0.875rem;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 7px;
+            color: #fca5a5;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-suspend:hover {
+            background: rgba(239,68,68,0.15);
+            border-color: rgba(239,68,68,0.35);
+        }
+
+        .btn-activate {
+            padding: 0.375rem 0.875rem;
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 7px;
+            color: #6ee7b7;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-activate:hover {
+            background: rgba(16,185,129,0.15);
+            border-color: rgba(16,185,129,0.35);
+        }
+
+        /* Loading */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            gap: 1rem;
+        }
+
+        .spinner-ring {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.06);
+            border-top-color: var(--brand);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-state p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Empty */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state svg {
+            width: 36px;
+            height: 36px;
+            color: var(--text-muted);
+            margin: 0 auto 1rem;
+            display: block;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Confirm dialog (custom) */
+        .confirm-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .confirm-backdrop.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .confirm-card {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 2rem;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+            transform: scale(0.93);
+            transition: transform 0.25s ease;
+        }
+
+        .confirm-backdrop.visible .confirm-card {
+            transform: scale(1);
+        }
+
+        .confirm-card .confirm-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+
+        .confirm-icon.warn {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.25);
+        }
+
+        .confirm-icon svg { width: 24px; height: 24px; }
+        .confirm-icon.warn svg { color: var(--warning); }
+
+        .confirm-card h4 {
+            font-size: 1.125rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .confirm-card p {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 0.75rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255,255,255,0.04);
+        }
+
+        .btn-confirm {
+            flex: 1;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.875rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-confirm.danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.25rem;
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            font-size: 0.875rem;
+            font-weight: 600;
+            max-width: 380px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .toast.success {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #6ee7b7;
+        }
+
+        .toast.error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+        }
+
+        /* Animate in */
+        .main-content {
+            animation: fade-up 0.4s ease both;
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card {
+            animation: fade-up 0.4s ease both;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card:nth-child(4) { animation-delay: 0.2s; }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation -->
-    <nav class="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <i data-lucide="shield" class="h-6 w-6 text-blue-400"></i>
-                    <span class="font-bold text-xl tracking-tight">SaaS Control Panel</span>
+    <!-- TOPBAR -->
+    <nav class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-logo">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span id="admin-name" class="text-sm font-medium text-gray-300"></span>
-                    <button onclick="handleLogout()" class="text-sm text-gray-400 hover:text-white transition-colors">
-                        Logout
-                    </button>
-                </div>
+                <span class="logo-text">SaaS Control Panel</span>
             </div>
+            <div class="superadmin-chip">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Super Admin
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="admin-info">Logged in as: <strong id="admin-name">—</strong></div>
+            <a href="/" class="btn-back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Dashboard
+            </a>
+            <button onclick="handleLogout()" class="btn-logout">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Logout
+            </button>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Error Alert -->
-        <div id="error-alert" class="hidden mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm">
-            <div class="flex items-center">
-                <i data-lucide="alert-circle" class="h-5 w-5 mr-2"></i>
-                <p id="error-message" class="font-medium"></p>
+    <!-- HERO -->
+    <div class="hero-banner">
+        <div class="hero-inner">
+            <h1>Platform Management</h1>
+            <p>Manage all tenant workspaces, monitor platform health, and control access across the entire SaaS.</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- Error -->
+        <div id="error-alert" class="error-banner" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p id="error-message"></p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="stat-card-glow"></div>
+                <div class="stat-row">
+                    <div>
+                        <div class="stat-label">Total Tenants</div>
+                        <div class="stat-value blue" id="stat-total-tenants">—</div>
+                    </div>
+                    <div class="stat-icon blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-card-glow"></div>
+                <div class="stat-row">
+                    <div>
+                        <div class="stat-label">Active Tenants</div>
+                        <div class="stat-value green" id="stat-active-tenants">—</div>
+                    </div>
+                    <div class="stat-icon green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-card-glow"></div>
+                <div class="stat-row">
+                    <div>
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value purple" id="stat-total-users">—</div>
+                    </div>
+                    <div class="stat-icon purple">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-card-glow"></div>
+                <div class="stat-row">
+                    <div>
+                        <div class="stat-label">Total Suppliers</div>
+                        <div class="stat-value orange" id="stat-total-suppliers">—</div>
+                    </div>
+                    <div class="stat-icon orange">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Dashboard Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Total Tenants</p>
-                        <p id="stat-total-tenants" class="text-3xl font-bold text-gray-900 mt-1">-</p>
-                    </div>
-                    <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                        <i data-lucide="building-2" class="h-6 w-6"></i>
-                    </div>
+        <!-- Tenant Table -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    Registered Companies (Tenants)
                 </div>
-            </div>
-            
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Active Tenants</p>
-                        <p id="stat-active-tenants" class="text-3xl font-bold text-green-600 mt-1">-</p>
-                    </div>
-                    <div class="p-3 bg-green-50 text-green-600 rounded-lg">
-                        <i data-lucide="check-circle-2" class="h-6 w-6"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Total Users</p>
-                        <p id="stat-total-users" class="text-3xl font-bold text-gray-900 mt-1">-</p>
-                    </div>
-                    <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-                        <i data-lucide="users" class="h-6 w-6"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500">Total Suppliers</p>
-                        <p id="stat-total-suppliers" class="text-3xl font-bold text-gray-900 mt-1">-</p>
-                    </div>
-                    <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
-                        <i data-lucide="boxes" class="h-6 w-6"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tenant Data Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="text-lg font-semibold text-gray-800">Registered Companies (Tenants)</h3>
-                <button onclick="fetchData()" class="text-gray-500 hover:text-gray-700 transition flex items-center text-sm font-medium">
-                    <i data-lucide="refresh-cw" class="h-4 w-4 mr-1"></i> Refresh
+                <button onclick="fetchData()" id="refresh-btn" class="btn-refresh">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+                    Refresh
                 </button>
             </div>
-            
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-white">
+
+            <div class="table-wrapper">
+                <div id="loading-indicator" class="loading-state">
+                    <div class="spinner-ring"></div>
+                    <p>Loading tenants...</p>
+                </div>
+
+                <table id="tenant-table" style="display:none;">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company Name</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Workspace Slug</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created At</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th>Company Name</th>
+                            <th>Workspace Slug</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th style="text-align:right;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="tenant-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Rows will be injected here via JS -->
-                    </tbody>
+                    <tbody id="tenant-table-body"></tbody>
                 </table>
-                <div id="loading-indicator" class="py-12 flex justify-center items-center">
-                    <div class="spinner border-gray-300 border-l-blue-600"></div>
-                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- Confirm Dialog -->
+    <div id="confirm-backdrop" class="confirm-backdrop">
+        <div class="confirm-card">
+            <div class="confirm-icon warn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <h4 id="confirm-title">Confirm Action</h4>
+            <p id="confirm-message">Are you sure you want to proceed?</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+                <button class="btn-confirm" id="confirm-ok-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="floating-toast" class="toast"></div>
+
     <script>
-        // API Base URL
         const API_URL = '/api/v1';
 
-        // Axios Interceptor for Auth Token
         axios.interceptors.request.use(config => {
-            const token = localStorage.getItem('access_token');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            if (token) config.headers.Authorization = `Bearer ${token}`;
             return config;
         });
 
-        // Initialize Lucide Icons
-        lucide.createIcons();
-
-        // On Load
         document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
-            }
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            if (!token) { window.location.href = '/login.html'; return; }
 
-            // Simple JWT decode to check superadmin
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                document.getElementById('admin-name').innerText = `Super Admin: ${payload.display_name || payload.email}`;
-                
+                document.getElementById('admin-name').textContent = payload.display_name || payload.email;
+
                 if (!payload.is_superadmin) {
-                    showError("Access Denied: You do not have Super Admin privileges.");
+                    showError('Access Denied: You do not have Super Admin privileges.');
+                    document.getElementById('loading-indicator').style.display = 'none';
                     return;
                 }
-            } catch (e) {
-                console.error("Token parse error", e);
+            } catch(e) {
+                console.error(e);
             }
 
             fetchData();
         });
 
         function showError(msg) {
-            document.getElementById('error-alert').classList.remove('hidden');
-            document.getElementById('error-message').innerText = msg;
-            document.getElementById('loading-indicator').classList.add('hidden');
+            const el = document.getElementById('error-alert');
+            document.getElementById('error-message').textContent = msg;
+            el.classList.add('visible');
         }
 
         function hideError() {
-            document.getElementById('error-alert').classList.add('hidden');
+            document.getElementById('error-alert').classList.remove('visible');
         }
 
         async function fetchData() {
             hideError();
-            document.getElementById('loading-indicator').classList.remove('hidden');
-            document.getElementById('tenant-table-body').innerHTML = '';
+            const refreshBtn = document.getElementById('refresh-btn');
+            refreshBtn.classList.add('spinning');
+
+            document.getElementById('loading-indicator').style.display = 'flex';
+            document.getElementById('tenant-table').style.display = 'none';
 
             try {
-                // Fetch Stats
-                const statsRes = await axios.get(`${API_URL}/saas-admin/stats`);
-                document.getElementById('stat-total-tenants').innerText = statsRes.data.total_tenants;
-                document.getElementById('stat-active-tenants').innerText = statsRes.data.active_tenants;
-                document.getElementById('stat-total-users').innerText = statsRes.data.total_users;
-                document.getElementById('stat-total-suppliers').innerText = statsRes.data.total_suppliers;
+                const [statsRes, tenantsRes] = await Promise.all([
+                    axios.get(`${API_URL}/saas-admin/stats`),
+                    axios.get(`${API_URL}/saas-admin/tenants`)
+                ]);
 
-                // Fetch Tenants
-                const tenantsRes = await axios.get(`${API_URL}/saas-admin/tenants`);
+                animateCount('stat-total-tenants', statsRes.data.total_tenants);
+                animateCount('stat-active-tenants', statsRes.data.active_tenants);
+                animateCount('stat-total-users', statsRes.data.total_users);
+                animateCount('stat-total-suppliers', statsRes.data.total_suppliers);
+
                 renderTenants(tenantsRes.data.data);
-                
-            } catch (error) {
-                console.error(error);
-                if (error.response?.status === 401 || error.response?.status === 403) {
-                    showError("Unauthorized: You must be a Super Admin to view this page.");
+            } catch(err) {
+                console.error(err);
+                if (err.response?.status === 401 || err.response?.status === 403) {
+                    showError('Unauthorized: You must be a Super Admin to view this page.');
                 } else {
-                    showError("Failed to load SaaS data. Please check your connection.");
+                    showError('Failed to load SaaS data. Please check your connection and try again.');
                 }
             } finally {
-                document.getElementById('loading-indicator').classList.add('hidden');
+                document.getElementById('loading-indicator').style.display = 'none';
+                refreshBtn.classList.remove('spinning');
             }
+        }
+
+        function animateCount(id, target) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const start = parseInt(el.textContent) || 0;
+            const duration = 700;
+            const startTime = performance.now();
+            const update = (time) => {
+                const progress = Math.min((time - startTime) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(start + (target - start) * ease);
+                if (progress < 1) requestAnimationFrame(update);
+            };
+            requestAnimationFrame(update);
         }
 
         function renderTenants(tenants) {
             const tbody = document.getElementById('tenant-table-body');
-            
-            if (tenants.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No companies registered yet.</td></tr>`;
-                return;
-            }
+            const table = document.getElementById('tenant-table');
 
-            let html = '';
-            tenants.forEach(t => {
-                const date = new Date(t.created_at).toLocaleDateString();
-                const statusBadge = t.is_active 
-                    ? `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>`
-                    : `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Suspended</span>`;
-                
-                const actionBtn = t.is_active
-                    ? `<button onclick="toggleTenant('${t.id}', false)" class="text-sm font-medium text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded transition">Suspend</button>`
-                    : `<button onclick="toggleTenant('${t.id}', true)" class="text-sm font-medium text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1 rounded transition">Activate</button>`;
+            tbody.innerHTML = '';
 
-                html += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">${t.name}</div>
-                            <div class="text-sm text-gray-500">${t.id.substring(0, 8)}...</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded inline-block">/${t.slug}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            ${statusBadge}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            ${date}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            ${actionBtn}
+            if (!tenants || tenants.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                <p>No companies registered yet.</p>
+                            </div>
                         </td>
                     </tr>
                 `;
+                table.style.display = 'table';
+                return;
+            }
+
+            tenants.forEach(t => {
+                const date = new Date(t.created_at).toLocaleDateString('id-ID', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+
+                const statusBadge = t.is_active
+                    ? `<span class="badge badge-active">Active</span>`
+                    : `<span class="badge badge-suspended">Suspended</span>`;
+
+                const actionBtn = t.is_active
+                    ? `<button onclick="showConfirm('${t.id}', false, '${escapeHtml(t.name)}')" class="btn-suspend">Suspend</button>`
+                    : `<button onclick="showConfirm('${t.id}', true, '${escapeHtml(t.name)}')" class="btn-activate">Activate</button>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="company-name">${escapeHtml(t.name)}</div>
+                        <div class="tenant-id">${t.id.substring(0, 12)}...</div>
+                    </td>
+                    <td><span class="slug-pill">/${escapeHtml(t.slug)}</span></td>
+                    <td>${statusBadge}</td>
+                    <td class="date-text">${date}</td>
+                    <td class="actions-cell">${actionBtn}</td>
+                `;
+                tbody.appendChild(tr);
             });
 
-            tbody.innerHTML = html;
+            table.style.display = 'table';
         }
 
-        async function toggleTenant(id, isActive) {
-            const actionStr = isActive ? 'activate' : 'suspend';
-            if (!confirm(`Are you sure you want to ${actionStr} this tenant?`)) return;
+        let pendingAction = null;
 
+        function showConfirm(id, isActive, name) {
+            const title = isActive ? 'Activate Tenant' : 'Suspend Tenant';
+            const msg = isActive
+                ? `Activate workspace for <strong style="color:var(--text-primary)">${escapeHtml(name)}</strong>? They will regain full access to the platform.`
+                : `Suspend workspace for <strong style="color:var(--text-primary)">${escapeHtml(name)}</strong>? Their users will lose access until reactivated.`;
+
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').innerHTML = msg;
+
+            const btn = document.getElementById('confirm-ok-btn');
+            btn.textContent = isActive ? 'Activate' : 'Suspend';
+            btn.className = isActive ? 'btn-confirm' : 'btn-confirm danger';
+
+            pendingAction = { id, isActive };
+            document.getElementById('confirm-backdrop').classList.add('visible');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirm-backdrop').classList.remove('visible');
+            pendingAction = null;
+        }
+
+        document.getElementById('confirm-ok-btn').addEventListener('click', async () => {
+            if (!pendingAction) return;
+            closeConfirm();
+            await toggleTenant(pendingAction.id, pendingAction.isActive);
+        });
+
+        document.getElementById('confirm-backdrop').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('confirm-backdrop')) closeConfirm();
+        });
+
+        async function toggleTenant(id, isActive) {
             try {
                 await axios.post(`${API_URL}/saas-admin/tenants/${id}/toggle`, { is_active: isActive });
-                fetchData(); // reload
-            } catch (error) {
-                console.error(error);
-                alert("Failed to toggle tenant status.");
+                showToast(`Tenant ${isActive ? 'activated' : 'suspended'} successfully.`, 'success');
+                await fetchData();
+            } catch(err) {
+                console.error(err);
+                showToast('Failed to update tenant status.', 'error');
             }
         }
 
         function handleLogout() {
             localStorage.removeItem('access_token');
+            localStorage.removeItem('token');
             window.location.href = '/login.html';
         }
 
+        let toastTimer;
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('floating-toast');
+            clearTimeout(toastTimer);
+
+            const icon = type === 'success'
+                ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+                : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `${icon}<span>${message}</span>`;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('show'));
+            });
+
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.toString()
+                .replace(/&/g,'&amp;')
+                .replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;')
+                .replace(/'/g,'&#039;');
+        }
     </script>
 </body>
 </html>
