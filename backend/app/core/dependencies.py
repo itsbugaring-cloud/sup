@@ -96,8 +96,8 @@ async def get_current_user(
 async def get_current_admin(
     current_user: Annotated[CurrentUserRead, Depends(get_current_user)],
 ) -> CurrentUserRead:
-    """Require the current user to have the 'admin' role."""
-    if current_user.role not in ("admin", "superadmin"):
+    """Require the current user to have the 'admin', 'superadmin', or 'owner' role."""
+    if current_user.role not in ("admin", "superadmin", "owner"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required",
