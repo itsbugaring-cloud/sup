@@ -3,298 +3,1086 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supplier CRM - Telegram Ops</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Supplier CRM — Bot Configuration</title>
+    <meta name="description" content="Configure Telegram bot integration for Supplier CRM. Manage webhooks, notifications, and chat targets.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Manrope', 'sans-serif'],
-                        mono: ['IBM Plex Mono', 'monospace'],
-                    },
-                    colors: {
-                        ink: '#08111f',
-                    },
-                },
-            },
-        };
-    </script>
+
     <style>
-        body {
-            min-height: 100vh;
-            background:
-                radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 24%),
-                radial-gradient(circle at top right, rgba(16, 185, 129, 0.14), transparent 22%),
-                linear-gradient(180deg, #eef4fb 0%, #f8fafc 55%, #edf4f7 100%);
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --brand: #4f8ef7;
+            --brand-dark: #2563eb;
+            --accent: #7c3aed;
+            --teal: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+
+            --bg: #070c18;
+            --surface: #0d1525;
+            --surface-2: #111827;
+            --surface-3: #1a2235;
+            --border: rgba(255,255,255,0.06);
+            --border-subtle: rgba(255,255,255,0.04);
+            --border-hover: rgba(255,255,255,0.12);
+            --border-focus: rgba(79,142,247,0.5);
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #4b5a72;
         }
+
+        html { font-size: 14px; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 5% 0%, rgba(6,182,212,0.07) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 95% 100%, rgba(79,142,247,0.06) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            height: 64px;
+            background: rgba(7,12,24,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .topbar-logo {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--teal), var(--brand));
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(6,182,212,0.3);
+        }
+
+        .topbar-logo svg { width: 18px; height: 18px; color: #fff; }
+
+        .topbar-brand-name {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+        }
+
+        .topbar-brand-name span { color: var(--teal); }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-left: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link svg { width: 15px; height: 15px; }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: rgba(6,182,212,0.12);
+            color: var(--teal);
+        }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .workspace-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.875rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .workspace-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--success);
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.875rem;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px;
+            color: #fca5a5;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-logout svg { width: 13px; height: 13px; }
+        .btn-logout:hover { background: rgba(239,68,68,0.14); }
+
+        /* MAIN LAYOUT */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .page-header h1 {
+            font-size: 1.625rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-header p {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 0.625rem;
+            flex-shrink: 0;
+        }
+
+        /* PANEL */
         .panel {
-            background: rgba(255, 255, 255, 0.84);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            box-shadow: 0 24px 60px rgba(7, 15, 28, 0.08);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.125rem 1.375rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.15);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 0.9375rem;
+            font-weight: 700;
+        }
+
+        .panel-title svg { width: 16px; height: 16px; color: var(--text-muted); }
+        .panel-title.teal svg { color: var(--teal); }
+
+        .panel-body { padding: 1.375rem; }
+
+        /* TOP STATUS GRID */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .status-cell {
+            background: var(--surface);
+            padding: 1.25rem 1.375rem;
+        }
+
+        .status-cell:first-child { border-radius: 0; }
+
+        .status-cell-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 0.625rem;
+        }
+
+        .status-cell-value {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .status-cell-value.teal { color: #67e8f9; }
+        .status-cell-value.green { color: #6ee7b7; }
+        .status-cell-value.warn { color: #fcd34d; }
+        .status-cell-value.muted { color: var(--text-secondary); }
+
+        @media (max-width: 768px) {
+            .status-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 400px) {
+            .status-grid { grid-template-columns: 1fr; }
+        }
+
+        /* TOP ACTION BUTTONS */
+        .top-action-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.375rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.1);
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.125rem;
+            border-radius: 10px;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action svg { width: 14px; height: 14px; }
+
+        .btn-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-test {
+            background: rgba(6,182,212,0.12);
+            border: 1px solid rgba(6,182,212,0.25);
+            color: var(--teal);
+        }
+
+        .btn-test:not(:disabled):hover {
+            background: rgba(6,182,212,0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-webhook {
+            background: rgba(79,142,247,0.12);
+            border: 1px solid rgba(79,142,247,0.25);
+            color: var(--brand);
+        }
+
+        .btn-webhook:not(:disabled):hover {
+            background: rgba(79,142,247,0.2);
+            transform: translateY(-1px);
+        }
+
+        /* MAIN GRID: form + sidebar */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* FORM FIELDS */
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .field-group {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.125rem;
+            transition: border-color 0.2s;
+        }
+
+        .field-group:focus-within {
+            border-color: rgba(79,142,247,0.25);
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 0.625rem;
+            letter-spacing: 0.03em;
+        }
+
+        .field-label span {
+            font-weight: 400;
+            color: var(--text-muted);
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .field-input, .field-textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: 'Inter', sans-serif;
+            padding: 0.6875rem 0.875rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .field-input::placeholder, .field-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .field-input:focus, .field-textarea:focus {
+            border-color: var(--brand);
+            background: rgba(79,142,247,0.05);
+            box-shadow: 0 0 0 3px rgba(79,142,247,0.1);
+        }
+
+        .field-textarea {
+            resize: vertical;
+            min-height: 110px;
+            font-family: 'Inter', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.6;
+        }
+
+        .field-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .field-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .field-grid-2 { grid-template-columns: 1fr; }
+        }
+
+        /* TOGGLE GRID */
+        .toggle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 600px) {
+            .toggle-grid { grid-template-columns: 1fr; }
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.125rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-item:hover {
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .toggle-item input[type="checkbox"] { display: none; }
+
+        .toggle-item input[type="checkbox"]:checked ~ .toggle-track {
+            background: var(--brand);
+            border-color: var(--brand);
+        }
+
+        .toggle-item input[type="checkbox"]:checked ~ .toggle-track::after {
+            transform: translateX(20px);
+        }
+
+        .toggle-info { flex: 1; }
+
+        .toggle-name {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .toggle-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .toggle-track {
+            width: 40px;
+            height: 22px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            position: relative;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.25s ease;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        /* FORM FOOTER */
+        .form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.375rem;
+            border-top: 1px solid var(--border);
+            background: rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .form-footer p {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            max-width: 400px;
+            line-height: 1.5;
+        }
+
+        .btn-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--brand), var(--accent));
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.875rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 16px rgba(79,142,247,0.25);
+        }
+
+        .btn-save svg { width: 15px; height: 15px; }
+
+        .btn-save:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(79,142,247,0.4);
+        }
+
+        .btn-save:active { transform: scale(0.98); }
+
+        .btn-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .saving-indicator {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .saving-indicator.visible { display: flex; }
+
+        .spin-sm {
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: var(--brand);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* SIDEBAR */
+        .sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        /* Info card */
+        .info-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 1rem;
+        }
+
+        .info-card-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card-value {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .info-card-value.mono {
+            font-family: 'Inter', monospace;
+            font-size: 0.75rem;
+            color: var(--teal);
+        }
+
+        /* Commands */
+        .cmd-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .cmd-item {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.5rem 0.75rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--teal);
+        }
+
+        .cmd-item::before {
+            content: '>';
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        /* Webhook URL box */
+        .webhook-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.72rem;
+            color: var(--brand);
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        /* Error box */
+        .error-box {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 9px;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+            color: #fca5a5;
+            line-height: 1.5;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .no-error {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Connection readout */
+        .readout-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            padding: 1.125rem 1.375rem;
+        }
+
+        .readout-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding-bottom: 0.625rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .readout-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .readout-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .readout-value {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .readout-value.mono {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--brand);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.25rem;
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            font-size: 0.875rem;
+            font-weight: 600;
+            max-width: 380px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .toast.success {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #6ee7b7;
+        }
+
+        .toast.error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+        }
+
+        @media (max-width: 768px) {
+            .topbar-nav { display: none; }
+            .main-content { padding: 1rem; }
         }
     </style>
 </head>
-<body class="text-slate-900">
-    <nav class="sticky top-0 z-40 border-b border-white/60 bg-ink/90 text-white backdrop-blur-xl">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <div class="flex items-center gap-8">
-                <div class="flex items-center gap-3">
-                    <div class="rounded-2xl bg-white/10 p-2.5 ring-1 ring-white/10">
-                        <i data-lucide="send" class="h-5 w-5 text-teal-300"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.24em] text-slate-300">Supplier CRM</p>
-                        <h1 class="text-lg font-extrabold tracking-tight">Telegram Operations</h1>
-                    </div>
-                </div>
-                <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 md:flex">
-                    <a href="/" class="rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10">Overview</a>
-                    <a href="/bot-config.html" class="rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink">Telegram Ops</a>
-                </div>
+<body>
+
+    <!-- TOPBAR -->
+    <nav class="topbar">
+        <a href="/" class="topbar-brand">
+            <div class="topbar-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </div>
-            <div class="flex items-center gap-3">
-                <div id="user-display-name" class="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 md:block"></div>
-                <button onclick="handleLogout()" class="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600">
-                    Logout
-                </button>
-            </div>
+            <span class="topbar-brand-name">Supplier<span>CRM</span></span>
+        </a>
+
+        <nav class="topbar-nav">
+            <a href="/" class="nav-link" id="nav-dashboard">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Dashboard
+            </a>
+            <a href="/bot-config.html" class="nav-link active">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Bot Config
+            </a>
+        </nav>
+
+        <div class="topbar-right">
+            <div class="workspace-badge" id="user-display-name">Loading...</div>
+            <button onclick="handleLogout()" class="btn-logout">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Logout
+            </button>
         </div>
     </nav>
 
-    <main class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <section class="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-            <div class="panel rounded-[2rem] p-6 lg:p-8">
-                <div class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                    <div class="max-w-2xl">
-                        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-sky-500"></span>
-                            Telegram integration control
-                        </div>
-                        <h2 class="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Status, notifications, and two-way actions in one ops panel.</h2>
-                        <p class="mt-3 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-                            Manage bot identity, webhook routing, target chats, and notification rules. The same bot can now push updates and receive review actions back into the dashboard.
-                        </p>
-                    </div>
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <button id="test-btn" onclick="sendTestMessage()" class="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-900">
-                            Send Test
-                        </button>
-                        <button id="webhook-btn" onclick="registerWebhook()" class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300">
-                            Register Webhook
-                        </button>
-                    </div>
-                </div>
+    <div class="main-content">
 
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" id="status-cards">
-                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Bot identity</p>
-                        <p id="bot-identity-card" class="mt-3 text-lg font-extrabold text-slate-950">Not connected</p>
-                    </article>
-                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Webhook</p>
-                        <p id="webhook-state-card" class="mt-3 text-lg font-extrabold text-slate-950">Unknown</p>
-                    </article>
-                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Notifications</p>
-                        <p id="notifications-state-card" class="mt-3 text-lg font-extrabold text-slate-950">Unknown</p>
-                    </article>
-                    <article class="rounded-[1.5rem] border border-slate-200 bg-white/75 p-5">
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Targets</p>
-                        <p id="targets-state-card" class="mt-3 text-lg font-extrabold text-slate-950">0 chats</p>
-                    </article>
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <div>
+                <h1>Bot Configuration</h1>
+                <p>Configure Telegram integration, webhooks, notification rules, and target chats.</p>
+            </div>
+        </div>
+
+        <!-- STATUS BAR PANEL -->
+        <div class="panel">
+            <div class="top-action-bar">
+                <button id="test-btn" onclick="sendTestMessage()" class="btn-action btn-test">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Send Test Message
+                </button>
+                <button id="webhook-btn" onclick="registerWebhook()" class="btn-action btn-webhook">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Register Webhook
+                </button>
+            </div>
+            <div class="status-grid">
+                <div class="status-cell">
+                    <div class="status-cell-label">Bot Identity</div>
+                    <div class="status-cell-value teal" id="bot-identity-card">—</div>
+                </div>
+                <div class="status-cell">
+                    <div class="status-cell-label">Webhook</div>
+                    <div class="status-cell-value warn" id="webhook-state-card">—</div>
+                </div>
+                <div class="status-cell">
+                    <div class="status-cell-label">Notifications</div>
+                    <div class="status-cell-value" id="notifications-state-card">—</div>
+                </div>
+                <div class="status-cell">
+                    <div class="status-cell-label">Active Targets</div>
+                    <div class="status-cell-value muted" id="targets-state-card">—</div>
                 </div>
             </div>
+        </div>
 
-            <aside class="panel rounded-[2rem] p-6">
-                <div class="mb-6">
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Bot Playbook</p>
-                    <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">Operator guide</h3>
-                </div>
-                <div class="space-y-4">
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Recommended commands</p>
-                        <div class="mt-3 space-y-2 font-mono text-sm text-slate-700">
-                            <p>/start</p>
-                            <p>/stats</p>
-                            <p>/pending</p>
-                        </div>
-                    </div>
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Webhook target</p>
-                        <p id="suggested-webhook" class="mt-3 break-all font-mono text-sm text-slate-700">Waiting for workspace context...</p>
-                    </div>
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Current issue stream</p>
-                        <p id="last-error-note" class="mt-3 text-sm text-slate-600">No bot errors recorded.</p>
-                    </div>
-                </div>
-            </aside>
-        </section>
+        <!-- MAIN GRID -->
+        <div class="main-grid">
 
-        <section class="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
-            <form id="config-form" class="panel rounded-[2rem] p-6 lg:p-8" onsubmit="saveConfiguration(event)">
-                <div class="mb-8 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Configuration</p>
-                        <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">Bot identity and delivery routes</h3>
+            <!-- LEFT: Configuration Form -->
+            <form id="config-form" class="panel" onsubmit="saveConfiguration(event)">
+                <div class="panel-header">
+                    <div class="panel-title teal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+                        Bot Identity & Delivery Routes
                     </div>
-                    <div id="loading-spinner" class="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600">
-                        <i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i>
+                    <div class="saving-indicator" id="saving-indicator">
+                        <div class="spin-sm"></div>
                         Saving...
                     </div>
                 </div>
 
-                <div class="grid gap-6">
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <label class="text-sm font-bold text-slate-800">Bot Token</label>
-                        <input id="bot-token" type="password" placeholder="1234567890:AA..." class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
-                        <p id="token-placeholder-note" class="mt-2 hidden text-xs text-slate-400">Leave blank to keep the current encrypted token.</p>
+                <div class="panel-body form-section">
+
+                    <!-- Bot Token -->
+                    <div class="field-group">
+                        <label class="field-label" for="bot-token">Bot Token <span>(from @BotFather)</span></label>
+                        <input type="password" id="bot-token" class="field-input" placeholder="1234567890:AAxxxx...">
+                        <p id="token-placeholder-note" class="field-hint hidden">🔒 Token is already saved. Leave blank to keep the existing token.</p>
                     </div>
 
-                    <div class="grid gap-6 lg:grid-cols-2">
-                        <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                            <label class="text-sm font-bold text-slate-800">Webhook URL</label>
-                            <input id="webhook-url" type="url" placeholder="https://your-domain/api/v1/webhook/tenant-id" class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
-                            <p class="mt-3 text-xs text-slate-400">Use the tenant-specific webhook route so Telegram callbacks can identify the workspace.</p>
+                    <!-- Webhook URL + Secret -->
+                    <div class="field-grid-2">
+                        <div class="field-group">
+                            <label class="field-label" for="webhook-url">Webhook URL</label>
+                            <input type="url" id="webhook-url" class="field-input" placeholder="https://your-domain.com/api/v1/webhook/...">
+                            <p class="field-hint">Use the tenant-specific webhook route for multi-tenant identification.</p>
                         </div>
-                        <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                            <label class="text-sm font-bold text-slate-800">Webhook Secret</label>
-                            <input id="webhook-secret" type="text" placeholder="Optional shared secret" class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
-                            <p class="mt-3 text-xs text-slate-400">Recommended when your Telegram gateway is publicly reachable.</p>
+                        <div class="field-group">
+                            <label class="field-label" for="webhook-secret">Webhook Secret <span>(optional)</span></label>
+                            <input type="text" id="webhook-secret" class="field-input" placeholder="Optional shared secret">
+                            <p class="field-hint">Recommended when your webhook endpoint is publicly accessible.</p>
                         </div>
                     </div>
 
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <label class="text-sm font-bold text-slate-800">Target Chat IDs</label>
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">One per line</span>
-                        </div>
-                        <textarea id="chat-ids-text" rows="5" placeholder="-100123456789: Ops Team&#10;987654321: Owner" class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm text-slate-700 focus:border-slate-900 focus:outline-none"></textarea>
+                    <!-- Chat IDs -->
+                    <div class="field-group">
+                        <label class="field-label" for="chat-ids-text">
+                            Target Chat IDs
+                            <span style="float:right;margin-left:auto;">Format: chat_id:label (one per line)</span>
+                        </label>
+                        <textarea id="chat-ids-text" class="field-textarea" placeholder="-100123456789:Ops Team&#10;987654321:Owner Personal&#10;-100987654321:Management Group"></textarea>
                     </div>
+
+                    <!-- Toggles -->
+                    <div>
+                        <div class="field-label" style="margin-bottom:0.875rem;">Runtime & Notification Settings</div>
+                        <div class="toggle-grid">
+                            <label class="toggle-item">
+                                <div class="toggle-info">
+                                    <div class="toggle-name">Enable Bot Runtime</div>
+                                    <div class="toggle-desc">Bot can send messages and handle callbacks.</div>
+                                </div>
+                                <input type="checkbox" id="is-active">
+                                <div class="toggle-track" onclick="this.previousElementSibling.click()"></div>
+                            </label>
+                            <label class="toggle-item">
+                                <div class="toggle-info">
+                                    <div class="toggle-name">Enable Notifications</div>
+                                    <div class="toggle-desc">Master switch for all outbound bot alerts.</div>
+                                </div>
+                                <input type="checkbox" id="notifications-enabled">
+                                <div class="toggle-track" onclick="this.previousElementSibling.click()"></div>
+                            </label>
+                            <label class="toggle-item">
+                                <div class="toggle-info">
+                                    <div class="toggle-name">Notify on Create</div>
+                                    <div class="toggle-desc">Alert when a new supplier is submitted.</div>
+                                </div>
+                                <input type="checkbox" id="notify-on-create">
+                                <div class="toggle-track" onclick="this.previousElementSibling.click()"></div>
+                            </label>
+                            <label class="toggle-item">
+                                <div class="toggle-info">
+                                    <div class="toggle-name">Notify on Status Change</div>
+                                    <div class="toggle-desc">Push updates on approve/reject/blacklist.</div>
+                                </div>
+                                <input type="checkbox" id="notify-on-status-change">
+                                <div class="toggle-track" onclick="this.previousElementSibling.click()"></div>
+                            </label>
+                            <label class="toggle-item">
+                                <div class="toggle-info">
+                                    <div class="toggle-name">Notify on Document Upload</div>
+                                    <div class="toggle-desc">Alert when supporting files are uploaded.</div>
+                                </div>
+                                <input type="checkbox" id="notify-on-document-upload">
+                                <div class="toggle-track" onclick="this.previousElementSibling.click()"></div>
+                            </label>
+                            <label class="toggle-item">
+                                <div class="toggle-info">
+                                    <div class="toggle-name">Notify on Export</div>
+                                    <div class="toggle-desc">Inform targets when reports are queued or ready.</div>
+                                </div>
+                                <input type="checkbox" id="notify-on-export">
+                                <div class="toggle-track" onclick="this.previousElementSibling.click()"></div>
+                            </label>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="mt-8 grid gap-4 sm:grid-cols-2">
-                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">Enable bot runtime</p>
-                                <p class="mt-1 text-sm text-slate-500">Bot can send messages and handle callbacks.</p>
-                            </div>
-                            <input id="is-active" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
-                        </div>
-                    </label>
-                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">Enable notifications</p>
-                                <p class="mt-1 text-sm text-slate-500">Master switch for outbound bot alerts.</p>
-                            </div>
-                            <input id="notifications-enabled" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
-                        </div>
-                    </label>
-                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">Notify on create</p>
-                                <p class="mt-1 text-sm text-slate-500">New supplier submission alert.</p>
-                            </div>
-                            <input id="notify-on-create" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
-                        </div>
-                    </label>
-                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">Notify on status change</p>
-                                <p class="mt-1 text-sm text-slate-500">Dashboard and Telegram action updates.</p>
-                            </div>
-                            <input id="notify-on-status-change" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
-                        </div>
-                    </label>
-                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">Notify on document upload</p>
-                                <p class="mt-1 text-sm text-slate-500">Alert when supporting files land in CRM.</p>
-                            </div>
-                            <input id="notify-on-document-upload" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
-                        </div>
-                    </label>
-                    <label class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-5">
-                        <div class="flex items-center justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">Notify on export</p>
-                                <p class="mt-1 text-sm text-slate-500">Inform chat targets when reports are queued or ready.</p>
-                            </div>
-                            <input id="notify-on-export" type="checkbox" class="h-5 w-5 rounded border-slate-300 text-slate-950">
-                        </div>
-                    </label>
-                </div>
-
-                <div class="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-sm text-slate-500">Changes are tenant-scoped and do not touch external VPS services outside this CRM app.</p>
-                    <button id="save-btn" type="submit" class="rounded-2xl bg-slate-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-900">
+                <div class="form-footer">
+                    <p>Changes are tenant-scoped and isolated. VPS services (WireGuard, wgdashboard, UNMS) are not affected.</p>
+                    <button type="submit" id="save-btn" class="btn-save">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                         Save Configuration
                     </button>
                 </div>
             </form>
 
-            <section class="panel rounded-[2rem] p-6 lg:p-8">
-                <div class="mb-6">
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Live Readout</p>
-                    <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">Connection summary</h3>
+            <!-- RIGHT: Sidebar -->
+            <div class="sidebar">
+
+                <!-- Bot Commands Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                            Bot Commands
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="cmd-list">
+                            <div class="cmd-item">/start</div>
+                            <div class="cmd-item">/stats</div>
+                            <div class="cmd-item">/pending</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="space-y-4" id="live-summary"></div>
-            </section>
-        </section>
-    </main>
+
+                <!-- Suggested Webhook -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            Suggested Webhook URL
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="webhook-box" id="suggested-webhook">Waiting for workspace context...</div>
+                        <button onclick="copyWebhook()" style="margin-top:0.625rem;width:100%;padding:0.5rem;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:8px;color:var(--brand);font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;" onmouseover="this.style.background='rgba(79,142,247,0.15)'" onmouseout="this.style.background='rgba(79,142,247,0.08)'">
+                            Copy URL
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Last Error -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Bot Error Log
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="last-error-note" class="no-error">No bot errors recorded.</div>
+                    </div>
+                </div>
+
+                <!-- Live Connection Summary -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            Connection Summary
+                        </div>
+                    </div>
+                    <div class="readout-list" id="live-summary">
+                        <!-- filled by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="floating-toast" class="toast"></div>
 
     <script>
         const API_URL = '/api/v1';
         let botConfig = null;
         let sessionPayload = null;
+        let suggestedWebhookUrl = '';
 
-        axios.interceptors.request.use((config) => {
+        axios.interceptors.request.use(config => {
             const token = localStorage.getItem('token');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+            if (token) config.headers.Authorization = `Bearer ${token}`;
             return config;
         });
 
         axios.interceptors.response.use(
-            (response) => response,
-            (error) => {
-                if (error.response && error.response.status === 401) {
+            res => res,
+            err => {
+                if (err.response?.status === 401) {
                     localStorage.removeItem('token');
                     window.location.href = '/login.html';
                 }
-                return Promise.reject(error);
+                return Promise.reject(err);
             }
         );
 
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
-            }
+            if (!token) { window.location.href = '/login.html'; return; }
 
             try {
                 sessionPayload = JSON.parse(atob(token.split('.')[1]));
-                document.getElementById('user-display-name').innerText = `Workspace: ${sessionPayload.display_name || sessionPayload.email}`;
-                document.getElementById('suggested-webhook').innerText = `${window.location.origin}/api/v1/webhook/${sessionPayload.tenant_id || 'tenant-id'}`;
-            } catch (error) {
-                console.error('JWT parse error', error);
-            }
+                document.getElementById('user-display-name').textContent = sessionPayload.display_name || sessionPayload.email;
+                suggestedWebhookUrl = `${window.location.origin}/api/v1/webhook/${sessionPayload.tenant_id || 'tenant-id'}`;
+                document.getElementById('suggested-webhook').textContent = suggestedWebhookUrl;
+            } catch(e) { console.error('JWT parse error', e); }
 
-            lucide.createIcons();
             fetchConfig();
         });
 
@@ -304,26 +1092,21 @@
                 const res = await axios.get(`${API_URL}/bot-config`);
                 botConfig = res.data.data;
                 populateForm(botConfig);
-            } catch (error) {
-                console.error('Failed to fetch config', error);
+            } catch(err) {
+                console.error(err);
                 showToast('Failed to load bot configuration.', 'error');
             } finally {
                 setLoading(false);
             }
         }
 
-        function setLoading(isLoading) {
-            const spinner = document.getElementById('loading-spinner');
-            const saveBtn = document.getElementById('save-btn');
-            spinner.classList.toggle('hidden', !isLoading);
-            spinner.classList.toggle('flex', isLoading);
-            saveBtn.disabled = isLoading;
+        function setLoading(on) {
+            document.getElementById('saving-indicator').classList.toggle('visible', on);
+            document.getElementById('save-btn').disabled = on;
         }
 
         function populateForm(data) {
-            if (!data) {
-                return;
-            }
+            if (!data) return;
 
             const tokenInput = document.getElementById('bot-token');
             const tokenNote = document.getElementById('token-placeholder-note');
@@ -332,50 +1115,76 @@
                 tokenInput.placeholder = 'Leave blank to keep existing token';
                 tokenNote.classList.remove('hidden');
             } else {
-                tokenInput.placeholder = '1234567890:AA...';
+                tokenInput.placeholder = '1234567890:AAxxxx...';
                 tokenNote.classList.add('hidden');
             }
 
             document.getElementById('webhook-url').value = data.webhook_url || '';
             document.getElementById('webhook-secret').value = '';
-            document.getElementById('chat-ids-text').value = (data.chat_ids || []).map((item) => `${item.chat_id}:${item.label}`).join('\n');
-            document.getElementById('notifications-enabled').checked = data.notifications_enabled;
-            document.getElementById('notify-on-create').checked = data.notify_on_create;
-            document.getElementById('notify-on-status-change').checked = data.notify_on_status_change;
-            document.getElementById('notify-on-document-upload').checked = data.notify_on_document_upload;
-            document.getElementById('notify-on-export').checked = data.notify_on_export;
-            document.getElementById('is-active').checked = data.is_active;
+            document.getElementById('chat-ids-text').value = (data.chat_ids || []).map(i => `${i.chat_id}:${i.label}`).join('\n');
 
-            document.getElementById('bot-identity-card').innerText = data.bot_username ? `@${data.bot_username}` : 'Not connected';
-            document.getElementById('webhook-state-card').innerText = data.webhook_is_set ? 'Registered' : 'Not registered';
-            document.getElementById('notifications-state-card').innerText = data.notifications_enabled ? 'Enabled' : 'Disabled';
-            document.getElementById('targets-state-card').innerText = `${(data.chat_ids || []).length} chats`;
-            document.getElementById('last-error-note').innerText = data.last_error || 'No bot errors recorded.';
+            // Checkboxes
+            setToggle('is-active', data.is_active);
+            setToggle('notifications-enabled', data.notifications_enabled);
+            setToggle('notify-on-create', data.notify_on_create);
+            setToggle('notify-on-status-change', data.notify_on_status_change);
+            setToggle('notify-on-document-upload', data.notify_on_document_upload);
+            setToggle('notify-on-export', data.notify_on_export);
+
+            // Status cards
+            document.getElementById('bot-identity-card').textContent = data.bot_username ? `@${data.bot_username}` : 'Not connected';
+
+            const webhookEl = document.getElementById('webhook-state-card');
+            if (data.webhook_is_set) {
+                webhookEl.textContent = 'Registered ✓';
+                webhookEl.className = 'status-cell-value green';
+            } else {
+                webhookEl.textContent = 'Not registered';
+                webhookEl.className = 'status-cell-value warn';
+            }
+
+            const notifEl = document.getElementById('notifications-state-card');
+            notifEl.textContent = data.notifications_enabled ? 'Enabled' : 'Disabled';
+            notifEl.className = `status-cell-value ${data.notifications_enabled ? 'green' : 'muted'}`;
+
+            document.getElementById('targets-state-card').textContent = `${(data.chat_ids || []).length} chat(s)`;
+
+            // Error log
+            const errEl = document.getElementById('last-error-note');
+            if (data.last_error) {
+                errEl.className = 'error-box';
+                errEl.textContent = data.last_error;
+            } else {
+                errEl.className = 'no-error';
+                errEl.textContent = 'No bot errors recorded.';
+            }
 
             renderLiveSummary(data);
         }
 
+        function setToggle(id, checked) {
+            document.getElementById(id).checked = !!checked;
+        }
+
         function renderLiveSummary(data) {
-            document.getElementById('live-summary').innerHTML = `
-                ${renderReadoutCard('Bot Username', data.bot_username ? `@${escapeHtml(data.bot_username)}` : 'Not connected')}
-                ${renderReadoutCard('Webhook URL', data.webhook_url ? escapeHtml(data.webhook_url) : 'Not configured')}
-                ${renderReadoutCard('Token hint', data.bot_token_hint || 'No token saved')}
-                ${renderReadoutCard('Last verified', data.last_verified_at ? formatDateTime(data.last_verified_at) : 'Never')}
-                ${renderReadoutCard('Notification routing', `${(data.chat_ids || []).filter((item) => item.is_active !== false).length} active chats`)}
-            `;
+            const rows = [
+                ['Bot Username', data.bot_username ? `@${escapeHtml(data.bot_username)}` : 'Not connected', false],
+                ['Webhook URL', data.webhook_url ? escapeHtml(data.webhook_url) : 'Not configured', true],
+                ['Token Hint', data.bot_token_hint || 'No token saved', false],
+                ['Last Verified', data.last_verified_at ? formatDateTime(data.last_verified_at) : 'Never', false],
+                ['Active Chats', `${(data.chat_ids || []).filter(i => i.is_active !== false).length} active`, false],
+            ];
+
+            document.getElementById('live-summary').innerHTML = rows.map(([label, value, mono]) => `
+                <div class="readout-row">
+                    <div class="readout-label">${label}</div>
+                    <div class="readout-value ${mono ? 'mono' : ''}">${value}</div>
+                </div>
+            `).join('');
         }
 
-        function renderReadoutCard(label, value) {
-            return `
-                <article class="rounded-[1.5rem] border border-slate-200 bg-white/80 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">${label}</p>
-                    <p class="mt-3 break-words text-sm font-bold text-slate-900">${value}</p>
-                </article>
-            `;
-        }
-
-        async function saveConfiguration(event) {
-            event.preventDefault();
+        async function saveConfiguration(e) {
+            e.preventDefault();
             setLoading(true);
 
             try {
@@ -392,18 +1201,16 @@
                 };
 
                 const tokenValue = document.getElementById('bot-token').value.trim();
-                if (tokenValue) {
-                    payload.bot_token = tokenValue;
-                }
+                if (tokenValue) payload.bot_token = tokenValue;
 
                 const res = await axios.put(`${API_URL}/bot-config`, payload);
                 botConfig = res.data.data;
                 document.getElementById('bot-token').value = '';
                 populateForm(botConfig);
-                showToast('Telegram configuration saved.', 'success');
-            } catch (error) {
-                console.error('Failed to save config', error);
-                showToast(error.response?.data?.message || 'Failed to save configuration.', 'error');
+                showToast('Telegram configuration saved successfully!', 'success');
+            } catch(err) {
+                console.error(err);
+                showToast(err.response?.data?.message || 'Failed to save configuration.', 'error');
             } finally {
                 setLoading(false);
             }
@@ -412,50 +1219,50 @@
         function parseChatIds() {
             return document.getElementById('chat-ids-text').value
                 .split('\n')
-                .map((line) => line.trim())
+                .map(l => l.trim())
                 .filter(Boolean)
-                .map((line) => {
-                    const [chatId, ...labelParts] = line.split(':');
-                    return {
-                        chat_id: chatId.trim(),
-                        label: (labelParts.join(':').trim() || 'Default'),
-                        is_active: true,
-                    };
+                .map(l => {
+                    const [chatId, ...labelParts] = l.split(':');
+                    return { chat_id: chatId.trim(), label: labelParts.join(':').trim() || 'Default', is_active: true };
                 });
         }
 
         async function sendTestMessage() {
             const btn = document.getElementById('test-btn');
             btn.disabled = true;
-            btn.innerText = 'Sending...';
+            btn.innerHTML = `<svg class="spin-sm" style="display:inline;width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:#67e8f9;border-radius:50%;animation:spin 0.7s linear infinite;" viewBox="0 0 24 24"></svg> Sending...`;
             try {
                 const res = await axios.post(`${API_URL}/bot-config/test`, {});
                 const result = res.data.data;
-                showToast(result.message || 'Telegram test finished.', result.success ? 'success' : 'error');
-            } catch (error) {
-                console.error('Failed to send test', error);
-                showToast('Failed to run bot test.', 'error');
+                showToast(result.message || 'Test completed.', result.success ? 'success' : 'error');
+            } catch(err) {
+                showToast('Failed to send test message.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Send Test';
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Test Message`;
             }
         }
 
         async function registerWebhook() {
             const btn = document.getElementById('webhook-btn');
             btn.disabled = true;
-            btn.innerText = 'Registering...';
+            btn.textContent = 'Registering...';
             try {
                 const res = await axios.post(`${API_URL}/bot-config/webhook`, {});
-                showToast(res.data.message || 'Webhook registered.', 'success');
+                showToast(res.data.message || 'Webhook registered successfully!', 'success');
                 await fetchConfig();
-            } catch (error) {
-                console.error('Failed to register webhook', error);
-                showToast(error.response?.data?.message || 'Failed to register webhook.', 'error');
+            } catch(err) {
+                showToast(err.response?.data?.message || 'Failed to register webhook.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Register Webhook';
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Register Webhook`;
             }
+        }
+
+        function copyWebhook() {
+            navigator.clipboard.writeText(suggestedWebhookUrl).then(() => {
+                showToast('Webhook URL copied to clipboard!', 'success');
+            });
         }
 
         function handleLogout() {
@@ -463,38 +1270,29 @@
             window.location.href = '/login.html';
         }
 
-        function formatDateTime(value) {
-            if (!value) {
-                return '-';
-            }
-            return new Date(value).toLocaleString();
+        function formatDateTime(v) {
+            if (!v) return '—';
+            return new Date(v).toLocaleString('id-ID', { hour12: false, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
+        let toastTimer;
         function showToast(message, type = 'success') {
-            const existing = document.getElementById('floating-toast');
-            if (existing) {
-                existing.remove();
-            }
+            const toast = document.getElementById('floating-toast');
+            clearTimeout(toastTimer);
 
-            const toast = document.createElement('div');
-            toast.id = 'floating-toast';
-            toast.className = `fixed bottom-5 right-5 z-50 rounded-2xl px-5 py-4 text-sm font-bold text-white shadow-2xl ${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`;
-            toast.innerText = message;
-            document.body.appendChild(toast);
+            const icon = type === 'success'
+                ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+                : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
 
-            setTimeout(() => toast.remove(), 3500);
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `${icon}<span>${message}</span>`;
+            requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
         function escapeHtml(str) {
-            if (str === null || str === undefined) {
-                return '';
-            }
-            return str.toString()
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            if (!str) return '';
+            return str.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
         }
     </script>
 </body>
