@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user
-from app.core.database import get_db
+from app.core.database import get_db_session
 from app.models.purchase import PurchaseStatus
 from app.models.tenant import User
 from app.schemas.common import PaginationMeta
@@ -25,7 +25,7 @@ async def create_purchase(
     request: Request,
     data: PurchaseOrderCreate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Create a new purchase order with items."""
     service = PurchaseService(db)
@@ -47,7 +47,7 @@ async def list_supplier_purchases(
     per_page: int = Query(20, ge=1, le=100),
     status: Optional[PurchaseStatus] = None,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """List all purchases for a specific supplier."""
     service = PurchaseService(db)
@@ -81,7 +81,7 @@ async def list_all_purchases(
     per_page: int = Query(20, ge=1, le=100),
     status: Optional[PurchaseStatus] = None,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """List all purchases across all suppliers."""
     service = PurchaseService(db)
@@ -112,7 +112,7 @@ async def list_all_purchases(
 async def get_purchase(
     purchase_id: UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Get a specific purchase order."""
     service = PurchaseService(db)
@@ -125,7 +125,7 @@ async def update_purchase_status(
     purchase_id: UUID,
     new_status: PurchaseStatus = Query(..., description="The new status"),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Update the status of a purchase order."""
     service = PurchaseService(db)
