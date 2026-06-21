@@ -4,8 +4,6 @@ app/api/v1/routers/auth.py
 Authentication and Tenant Registration router for SaaS.
 """
 
-from __future__ import annotations
-
 from fastapi import APIRouter, HTTPException, status, Request
 
 from app.core.dependencies import TenantRepo, UserRepo
