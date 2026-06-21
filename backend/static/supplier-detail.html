@@ -6,6 +6,12 @@
     <title>Supplier Detail — CRM</title>
     <meta name="description" content="View and manage supplier details, documents, and status changes.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Flatpickr for beautiful dates -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Choices.js for premium dropdowns -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -120,9 +126,22 @@
             padding: 0.5rem 0.75rem; outline: none; transition: all 0.15s ease;
         }
         .field-input::placeholder, .field-textarea::placeholder { color: #94a3b8; }
-        .field-input:focus, .field-textarea:focus, .field-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .field-input:focus, .field-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .field-textarea { resize: vertical; min-height: 80px; }
-        .field-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; }
+        
+        /* Premium Choices.js Dropdown Styling Override */
+        .choices { margin-bottom: 0; font-size: 0.875rem; font-family: 'Inter', sans-serif; }
+        .choices__inner { min-height: unset; padding: 0.35rem 0.75rem !important; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; }
+        .choices[data-type*="select-one"] .choices__inner { padding-bottom: 0.35rem !important; }
+        .choices.is-focused .choices__inner { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .choices__list--dropdown { border-color: #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .choices__list--dropdown .choices__item--selectable.is-highlighted { background: #eff6ff; color: #2563eb; }
+        .choices[data-type*="select-one"]::after { border-color: #64748b transparent transparent transparent; margin-top: -2.5px; }
+        .choices[data-type*="select-one"].is-open::after { border-color: transparent transparent #64748b transparent; margin-top: -7.5px; }
+
+        /* Premium Flatpickr overrides */
+        .flatpickr-calendar { font-family: 'Inter', sans-serif; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 12px; }
+        .flatpickr-day.selected { background: #2563eb !important; border-color: #2563eb !important; }
         
         .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         @media (max-width: 600px) { .edit-grid { grid-template-columns: 1fr; } }
@@ -519,11 +538,11 @@ function renderUI() {
                             <input type="file" id="doc-file" onchange="handleFileSelect(event)">
                             
                             <div class="upload-fields" onclick="event.stopPropagation()">
-                                <select id="doc-type" class="field-select">
+                                <select id="doc-type">
                                     <option value="" disabled selected>Select Document Type</option>
                                     ${DOCUMENT_TYPES.map(t => `<option value="${t}">${t.replace('_',' ').toUpperCase()}</option>`).join('')}
                                 </select>
-                                <input type="date" id="doc-expiry" class="field-input" title="Expiry Date (Optional)">
+                                <input type="text" id="doc-expiry" placeholder="Expiry Date (Optional)">
                             </div>
                             <div id="selected-file-display" class="selected-file-name" style="display:none;"></div>
                             <button class="btn btn-ghost" style="width:100%;margin-top:0.5rem;background:#ffffff;" onclick="event.stopPropagation(); uploadDocument()">Upload Document</button>
@@ -535,6 +554,10 @@ function renderUI() {
     `;
 
     document.getElementById('main-content').innerHTML = html;
+    
+    // Initialize UI Libs after render
+    documentTypeChoice = new Choices('#doc-type', { searchEnabled: false, itemSelectText: '' });
+    docExpiryPickr = flatpickr("#doc-expiry", { dateFormat: "Y-m-d", altInput: true, altFormat: "F j, Y", disableMobile: true });
 }
 
 function renderInfoGrid(s) {
@@ -718,22 +741,21 @@ function handleFileDrop(e) {
 }
 async function uploadDocument() {
     const fileInput = document.getElementById('doc-file');
-    const typeSelect = document.getElementById('doc-type');
     const expiryInput = document.getElementById('doc-expiry');
     
     if (!fileInput.files[0]) return showToast('Please select a file first.', 'warn');
-    if (!typeSelect.value) return showToast('Please select document type.', 'warn');
+    if (!documentTypeChoice.getValue(true)) return showToast('Please select document type.', 'warn');
 
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
-    formData.append('document_type', typeSelect.value);
+    formData.append('document_type', documentTypeChoice.getValue(true));
     formData.append('supplier_id', supplierId);
     if (expiryInput.value) formData.append('expiry_date', expiryInput.value);
 
     try {
         await axios.post(`${API}/documents/upload`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         showToast('Document uploaded successfully.', 'success');
-        fileInput.value = ''; typeSelect.value = ''; expiryInput.value = '';
+        fileInput.value = ''; documentTypeChoice.setChoiceByValue(''); docExpiryPickr.clear();
         document.getElementById('selected-file-display').style.display='none';
         loadData();
     } catch(err) { showToast('Upload failed.', 'error'); }
@@ -755,7 +777,7 @@ async function verifyDocument(docId) {
 // PURCHASE MODAL LOGIC
 function openPurchaseModal() {
     document.getElementById('p-po-number').value = '';
-    document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+    pDatePickr.setDate(new Date());
     document.getElementById('p-notes').value = '';
     document.getElementById('purchase-items-container').innerHTML = '';
     addPurchaseItemRow();
