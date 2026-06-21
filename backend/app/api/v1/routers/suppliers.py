@@ -16,7 +16,7 @@ Endpoints follow kebab-case convention per project spec:
 All endpoints require JWT auth. Delete/restore require admin role.
 """
 
-from __future__ import annotations
+
 
 import uuid
 

@@ -12,7 +12,7 @@ Endpoints:
   GET  /api/v1/suppliers/export/{task_id} → poll async export status
 """
 
-from __future__ import annotations
+
 
 import json
 import uuid

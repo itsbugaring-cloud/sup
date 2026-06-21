@@ -10,7 +10,6 @@ Endpoints:
   PATCH  /api/v1/supplier-documents/{document_id}/verify   → toggle verify
 """
 
-from __future__ import annotations
 
 import uuid
 

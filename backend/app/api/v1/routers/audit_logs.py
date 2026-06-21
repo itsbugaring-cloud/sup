@@ -8,7 +8,7 @@ Endpoints:
   GET /api/v1/audit-logs/{entity_type}/{entity_id} → entity change history
 """
 
-from __future__ import annotations
+
 
 from fastapi import APIRouter, Query
 

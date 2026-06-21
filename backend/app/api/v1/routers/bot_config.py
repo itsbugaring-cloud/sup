@@ -10,7 +10,7 @@ Endpoints:
   POST /api/v1/bot-config/webhook   → register webhook with Telegram
 """
 
-from __future__ import annotations
+
 
 from fastapi import APIRouter, Depends
 from app.core.dependencies import AdminUser, BotConfigRepo
