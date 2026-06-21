@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.routers.auth import get_current_user
+from app.core.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.purchase import PurchaseStatus
 from app.models.tenant import User
