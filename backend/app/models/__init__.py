@@ -9,7 +9,7 @@ Also ensures the relationship back-references resolve correctly.
 """
 
 from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin, TenantMixin
-from app.models.tenant import Tenant, User
+from app.models.tenant import Tenant, User, TeamInvitation
 from app.models.audit_log import AuditAction, AuditActorType, AuditLog
 from app.models.supplier import Supplier, SupplierStatus
 from app.models.supplier_document import DocumentType, SupplierDocument
@@ -24,6 +24,7 @@ __all__ = [
     "TenantMixin",
     "Tenant",
     "User",
+    "TeamInvitation",
     "AuditAction",
     "AuditActorType",
     "AuditLog",

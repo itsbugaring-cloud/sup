@@ -6,9 +6,10 @@ Authentication and Tenant Registration router for SaaS.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 
 from app.core.dependencies import TenantRepo, UserRepo
+from app.core.rate_limit import limiter
 from app.core.security import create_access_token, hash_password, verify_password
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.schemas.common import CRMBaseModel, SuccessResponse
@@ -30,7 +31,9 @@ class RegisterTenantRequest(CRMBaseModel):
     response_model=SuccessResponse[TokenResponse],
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("3/minute")
 async def register_tenant(
+    request: Request,
     req: RegisterTenantRequest,
     tenant_repo: TenantRepo,
     user_repo: UserRepo,
@@ -81,10 +84,12 @@ async def register_tenant(
 
 @router.post(
     "/login",
-    summary="Login and obtain JWT Token",
+    summary="Authenticate user and return JWT token",
     response_model=SuccessResponse[TokenResponse],
 )
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     req: LoginRequest,
     user_repo: UserRepo,
 ) -> SuccessResponse[TokenResponse]:

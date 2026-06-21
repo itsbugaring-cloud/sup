@@ -29,14 +29,14 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
 
 from app.api.v1.router import api_v1_router
 from app.core.config import settings
 from app.core.logging import configure_logging, get_logger
+from app.core.rate_limit import limiter
 
 logger = get_logger(__name__)
 
@@ -97,11 +97,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 # ── Rate Limiter ──────────────────────────────────────────────────────────────
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=[settings.rate_limit.RATE_LIMIT_DEFAULT],
-    storage_uri=settings.redis.REDIS_URL,
-)
+# Moved to app.core.rate_limit to avoid circular imports
 
 
 # ── Application Factory ───────────────────────────────────────────────────────

@@ -16,6 +16,8 @@ import uuid
 
 from fastapi import APIRouter, File, Form, Request, UploadFile, status
 
+from app.core.rate_limit import limiter
+
 from app.core.dependencies import (
     AdminUser,
     AuditRepo,
@@ -57,6 +59,7 @@ def _get_service(
     status_code=status.HTTP_201_CREATED,
     response_model=SuccessResponse[SupplierDocumentRead],
 )
+@limiter.limit("20/minute")
 async def upload_document(
     supplier_id: uuid.UUID,
     request: Request,

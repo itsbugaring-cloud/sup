@@ -75,3 +75,34 @@ class User(TimestampMixin, Base):
 
     def __repr__(self) -> str:
         return f"<User email={self.email!r} role={self.role!r}>"
+
+
+class TeamInvitation(TimestampMixin, Base):
+    """
+    SaaS Team Invitation.
+    """
+    __tablename__ = "team_invitations"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=False,
+        index=True,
+    )
+
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(50), nullable=False, server_default="viewer")
+    token: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    
+    # pending, accepted, expired
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
+
+    def __repr__(self) -> str:
+        return f"<TeamInvitation email={self.email!r} role={self.role!r} status={self.status!r}>"
