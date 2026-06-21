@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.core.database import get_db
+from app.core.database import get_db_session
 from app.core.dependencies import AdminUser, CurrentUser, UserRepo
 from app.models.tenant import TeamInvitation, User
 from app.schemas.common import SuccessResponse
@@ -34,7 +34,7 @@ router = APIRouter(prefix="/team", tags=["team"])
 async def invite_member(
     req: TeamInviteRequest,
     current_user: AdminUser,
-    db: AsyncSession = get_db,
+    db: AsyncSession = Depends(get_db_session),
     user_repo: UserRepo = UserRepo,
 ) -> SuccessResponse[TeamInviteResponse]:
     """Admin only. Generates an invitation token for a new team member."""
@@ -71,7 +71,7 @@ async def invite_member(
 )
 async def accept_invite(
     req: TeamInviteAcceptRequest,
-    db: AsyncSession = get_db,
+    db: AsyncSession = Depends(get_db_session),
     user_repo: UserRepo = UserRepo,
 ) -> SuccessResponse[TeamMemberRead]:
     """Public endpoint to accept an invite with a token."""
@@ -114,7 +114,7 @@ async def accept_invite(
 )
 async def list_members(
     current_user: CurrentUser,
-    db: AsyncSession = get_db,
+    db: AsyncSession = Depends(get_db_session),
 ) -> SuccessResponse[list[TeamMemberRead]]:
     stmt = select(User).where(User.tenant_id == current_user.tenant_id)
     result = await db.execute(stmt)
