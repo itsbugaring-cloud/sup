@@ -6,6 +6,12 @@
     <title>Supplier CRM — Dashboard</title>
     <meta name="description" content="Supplier management dashboard. Monitor, approve, and manage all company suppliers in one place.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Flatpickr for beautiful dates -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Choices.js for premium dropdowns -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -303,19 +309,25 @@
 
         .filter-select {
             padding: 0.45rem 2rem 0.45rem 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 7px;
-            font-size: 0.8125rem;
-            font-family: 'Inter', sans-serif;
-            color: #374151;
-            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 0.5rem center / 1rem;
-            appearance: none;
-            cursor: pointer;
-            transition: border-color 0.15s;
-            outline: none;
-            color-scheme: light;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;
+            color: #1a202c; font-size: 0.8125rem; font-family: 'Inter', sans-serif;
+            padding: 0.4rem 0.6rem; outline: none; transition: all 0.15s ease;
         }
         .filter-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        
+        /* Premium Choices.js Dropdown Styling Override */
+        .choices { margin-bottom: 0; font-size: 0.8125rem; font-family: 'Inter', sans-serif; width: 140px; }
+        .choices__inner { min-height: unset; padding: 0.25rem 0.6rem !important; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; }
+        .choices[data-type*="select-one"] .choices__inner { padding-bottom: 0.25rem !important; }
+        .choices.is-focused .choices__inner { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .choices__list--dropdown { border-color: #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 200px; }
+        .choices__list--dropdown .choices__item--selectable.is-highlighted { background: #eff6ff; color: #2563eb; }
+        .choices[data-type*="select-one"]::after { border-color: #64748b transparent transparent transparent; margin-top: -2.5px; }
+        .choices[data-type*="select-one"].is-open::after { border-color: transparent transparent #64748b transparent; margin-top: -7.5px; }
+
+        /* Premium Flatpickr overrides */
+        .flatpickr-calendar { font-family: 'Inter', sans-serif; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 12px; }
+        .flatpickr-day.selected { background: #2563eb !important; border-color: #2563eb !important; }
 
         .search-wrapper {
             position: relative;
@@ -875,7 +887,7 @@
 
                 <!-- Filter Bar -->
                 <div class="filter-bar">
-                    <select id="status-filter" class="filter-select" onchange="handleFilterChange()">
+                    <select id="status-filter" class="filter-select">
                         <option value="">All Statuses</option>
                         <option value="draft">Draft</option>
                         <option value="pending_review">Pending Review</option>
@@ -889,8 +901,8 @@
                         <input type="text" id="search-input" class="search-input" placeholder="Search company, NPWP..." onkeyup="handleSearchKeyUp(event)">
                     </div>
 
-                    <input type="date" id="date-from" class="filter-select" title="Created After" style="min-width:130px;" onchange="handleFilterChange()">
-                    <input type="date" id="date-to" class="filter-select" title="Created Before" style="min-width:130px;" onchange="handleFilterChange()">
+                    <input type="text" id="date-from" class="filter-select" placeholder="Created After" style="width:130px;">
+                    <input type="text" id="date-to" class="filter-select" placeholder="Created Before" style="width:130px;">
 
                     <button onclick="executeSearch()" class="btn-search">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1030,6 +1042,9 @@
 
     <script>
         const API_URL = '/api/v1';
+        let statusFilterChoice = null;
+        let dateFromPickr = null;
+        let dateToPickr = null;
 
         axios.interceptors.request.use(config => {
             const token = localStorage.getItem('token');
@@ -1077,6 +1092,30 @@
             const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
             document.getElementById('greeting-text').textContent = greet;
             document.getElementById('date-text').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Initialize Premium UI Libraries
+            statusFilterChoice = new Choices('#status-filter', {
+                searchEnabled: false,
+                itemSelectText: '',
+                shouldSort: false
+            });
+            document.getElementById('status-filter').addEventListener('change', handleFilterChange);
+
+            dateFromPickr = flatpickr("#date-from", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d M Y",
+                disableMobile: true,
+                onChange: handleFilterChange
+            });
+
+            dateToPickr = flatpickr("#date-to", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d M Y",
+                disableMobile: true,
+                onChange: handleFilterChange
+            });
 
             initDashboard();
         });
@@ -1348,7 +1387,11 @@
         }
 
         function changePage(dir) { currentPage += dir; fetchDashboardData(); }
-        function handleFilterChange() { statusFilter = document.getElementById('status-filter').value; currentPage = 1; fetchDashboardData(); }
+        function handleFilterChange() {
+            currentPage = 1;
+            statusFilter = statusFilterChoice.getValue(true) || '';
+            fetchDashboardData();
+        }
         function handleSearchKeyUp(e) { if (e.key === 'Enter') executeSearch(); }
         function executeSearch() { searchQuery = document.getElementById('search-input').value.trim(); currentPage = 1; fetchDashboardData(); }
         function resetFilters() {
