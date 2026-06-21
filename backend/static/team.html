@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier CRM — Team Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 14px; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; color: #1a202c; min-height: 100vh; }
+
+        /* ── TOPBAR ───────────────────────────── */
+        .topbar {
+            height: 56px; background: #ffffff; border-bottom: 1px solid #e8ecf0; display: flex;
+            align-items: center; padding: 0 1.5rem; gap: 1.5rem; position: sticky; top: 0; z-index: 100;
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 0.625rem; text-decoration: none; }
+        .topbar-logo { width: 32px; height: 32px; background: #2563eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .topbar-logo svg { width: 16px; height: 16px; color: #fff; }
+        .topbar-brand-name { font-size: 0.9375rem; font-weight: 700; color: #1a202c; letter-spacing: -0.02em; }
+        .topbar-brand-name span { color: #2563eb; }
+        .topbar-nav { display: flex; align-items: center; gap: 0.125rem; margin-left: 0.5rem; }
+        .nav-link {
+            display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 500; color: #64748b; text-decoration: none;
+        }
+        .nav-link svg { width: 14px; height: 14px; }
+        .nav-link:hover { background: #f1f5f9; color: #1a202c; }
+        .nav-link.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
+        .workspace-badge {
+            display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem; background: #f8fafc;
+            border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: #475569;
+        }
+        .workspace-badge::before { content: ''; width: 6px; height: 6px; background: #10b981; border-radius: 50%; }
+        .btn-logout {
+            display: flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: #fff5f5;
+            border: 1px solid #fed7d7; border-radius: 6px; color: #c53030; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+        }
+
+        /* ── LAYOUT ──────────────────────────── */
+        .page-body { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; }
+        .page-header h1 { font-size: 1.5rem; font-weight: 700; color: #1a202c; margin-bottom: 0.2rem; }
+        .subtitle { font-size: 0.875rem; color: #64748b; }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.2rem; background: #2563eb;
+            color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+        
+        .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .table-wrap { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 1rem; background: #f8fafc; font-size: 0.75rem; font-weight: 600; color: #64748b; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; color: #334155; }
+        .avatar { width: 32px; height: 32px; background: #e0e7ff; color: #4338ca; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; }
+        .td-user { display: flex; align-items: center; gap: 0.75rem; font-weight: 600; color: #1e293b; }
+        .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .badge.admin { background: #fef3c7; color: #d97706; }
+        .badge.staff { background: #e0f2fe; color: #0284c7; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 1000; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-card { background: #fff; padding: 2rem; border-radius: 12px; width: 400px; max-width: 90%; transform: translateY(20px); transition: 0.2s; }
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8125rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem; }
+        .form-control { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Inter'; font-size: 0.875rem; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; }
+        .btn-cancel { padding: 0.6rem 1.2rem; background: #f1f5f9; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: #475569; }
+        .btn-cancel:hover { background: #e2e8f0; }
+
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: #fff; border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { border-left-color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <nav class="topbar">
+        <a href="/" class="topbar-brand">
+            <div class="topbar-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <span class="topbar-brand-name">Supplier<span>CRM</span></span>
+        </a>
+        <nav class="topbar-nav" id="main-nav">
+            <a href="/" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a>
+            <a href="/bot-config.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Bot Config</a>
+            <a href="/team.html" class="nav-link active"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Team Settings</a>
+        </nav>
+        <div class="topbar-right">
+            <div class="workspace-badge" id="user-display-name">Loading...</div>
+            <button onclick="handleLogout()" class="btn-logout"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
+        </div>
+    </nav>
+
+    <div class="page-body">
+        <div class="page-header">
+            <div>
+                <h1>Team Management</h1>
+                <div class="subtitle">Invite staff to help manage supplier approvals.</div>
+            </div>
+            <button class="btn-primary" onclick="openInviteModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Invite Member
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email Address</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="team-tbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8;">Loading team members...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div class="modal-overlay" id="inviteModal">
+        <div class="modal-card">
+            <h2 style="margin-bottom: 0.5rem;">Invite Team Member</h2>
+            <p style="font-size: 0.8125rem; color: #64748b; margin-bottom: 1.5rem;">Send an invitation link to their email.</p>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="invite-email" class="form-control" placeholder="name@company.com" />
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="invite-role" class="form-control">
+                    <option value="staff">Staff (Can review and approve)</option>
+                    <option value="admin">Admin (Full Access)</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeInviteModal()">Cancel</button>
+                <button class="btn-primary" id="btn-send-invite" onclick="sendInvite()">Send Invite</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Message here</div>
+
+    <script>
+        const API_URL = '/api/v1';
+
+        axios.interceptors.request.use(config => {
+            const token = localStorage.getItem('token');
+            if (token) config.headers.Authorization = `Bearer ${token}`;
+            return config;
+        });
+
+        axios.interceptors.response.use(res => res, err => {
+            if (err.response?.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            }
+            return Promise.reject(err);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = '/login.html'; return; }
+            
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                document.getElementById('user-display-name').textContent = payload.display_name || payload.email;
+                if (!payload.is_superadmin && payload.role !== 'admin') {
+                    document.querySelector('.btn-primary').style.display = 'none'; // Only admins can invite
+                }
+            } catch(e) {}
+
+            fetchTeamMembers();
+        });
+
+        async function fetchTeamMembers() {
+            try {
+                const res = await axios.get(`${API_URL}/team/members`);
+                const members = res.data.data;
+                const tbody = document.getElementById('team-tbody');
+                tbody.innerHTML = '';
+                
+                members.forEach(m => {
+                    const initials = (m.display_name || m.email).substring(0, 2).toUpperCase();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div class="td-user">
+                                <div class="avatar">${initials}</div>
+                                <span>${m.display_name || '—'}</span>
+                            </div>
+                        </td>
+                        <td>${m.email}</td>
+                        <td><span class="badge ${m.role}">${m.role}</span></td>
+                        <td><span style="color: #10b981; font-weight: 500;">Active</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch(err) {
+                showToast('Failed to load team members', 'error');
+            }
+        }
+
+        function openInviteModal() {
+            document.getElementById('invite-email').value = '';
+            document.getElementById('inviteModal').classList.add('active');
+        }
+
+        function closeInviteModal() {
+            document.getElementById('inviteModal').classList.remove('active');
+        }
+
+        async function sendInvite() {
+            const email = document.getElementById('invite-email').value.trim();
+            const role = document.getElementById('invite-role').value;
+            if (!email) return showToast('Email is required', 'error');
+
+            const btn = document.getElementById('btn-send-invite');
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await axios.post(`${API_URL}/team/invite`, { email, role });
+                const token = res.data.data.token;
+                
+                // In a real app this would send an email. For now, we show the link to the user.
+                const link = `${window.location.origin}/accept-invite.html?token=${token}`;
+                closeInviteModal();
+                
+                // Show prompt with link
+                prompt("Invitation created successfully! Since email sending is mocked, please share this link with the user:", link);
+                
+                showToast('Invitation generated successfully');
+            } catch(err) {
+                showToast(err.response?.data?.detail || 'Failed to send invite', 'error');
+            } finally {
+                btn.textContent = 'Send Invite';
+                btn.disabled = false;
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
+        let toastTimer;
+        function showToast(msg, type='success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `toast ${type} show`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accept Invitation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .auth-card { background: #fff; padding: 2.5rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); text-align: center; }
+        h1 { font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; }
+        p.subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
+        .form-group { text-align: left; margin-bottom: 1rem; }
+        label { display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; }
+        input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter'; transition: 0.2s; }
+        input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .btn { width: 100%; padding: 0.75rem; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 1rem; }
+        .btn:hover { background: #1d4ed8; }
+        .error { color: #dc2626; font-size: 0.875rem; margin-top: 1rem; display: none; }
+        .success { color: #10b981; font-size: 0.875rem; margin-top: 1rem; display: none; }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <h1>Join the Team</h1>
+        <p class="subtitle">Complete your registration to access Supplier CRM</p>
+        
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="name" placeholder="John Doe" required />
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Create a password" required />
+        </div>
+        
+        <div id="error-msg" class="error"></div>
+        <div id="success-msg" class="success">Registration successful! Redirecting...</div>
+
+        <button class="btn" id="btn-submit" onclick="acceptInvite()">Create Account</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (!token) {
+            document.querySelector('.auth-card').innerHTML = `
+                <h1 style="color:#dc2626;">Invalid Link</h1>
+                <p class="subtitle">The invitation link is invalid or missing the security token.</p>
+            `;
+        }
+
+        async function acceptInvite() {
+            const name = document.getElementById('name').value.trim();
+            const password = document.getElementById('password').value;
+            const err = document.getElementById('error-msg');
+            const succ = document.getElementById('success-msg');
+            const btn = document.getElementById('btn-submit');
+
+            err.style.display = 'none';
+            if (!name || !password) {
+                err.textContent = 'Please fill out all fields.';
+                err.style.display = 'block';
+                return;
+            }
+            if (password.length < 6) {
+                err.textContent = 'Password must be at least 6 characters.';
+                err.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Registering...';
+
+            try {
+                const res = await axios.post('/api/v1/team/accept-invite', {
+                    token: token,
+                    password: password,
+                    display_name: name
+                });
+                
+                // Success
+                succ.style.display = 'block';
+                btn.style.display = 'none';
+                setTimeout(() => window.location.href = '/login.html', 2000);
+            } catch(e) {
+                err.textContent = e.response?.data?.detail || 'Failed to accept invite. Token may be expired.';
+                err.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+    </script>
+</body>
+</html>
