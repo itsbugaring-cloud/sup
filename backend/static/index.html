@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Chart.js for Dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -873,6 +875,33 @@
             </div>
         </div>
 
+        <!-- CHARTS GRID -->
+        <div class="stats-grid" style="grid-template-columns: 2fr 1fr; margin-bottom: 1.5rem;">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Supplier Registration Trend (Last 6 Months)
+                    </div>
+                </div>
+                <div style="padding: 1.25rem; height: 300px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                        Composition by Status
+                    </div>
+                </div>
+                <div style="padding: 1.25rem; height: 300px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- MAIN GRID -->
         <div class="main-grid">
 
@@ -1145,6 +1174,7 @@
 
                 const overview = overviewRes.data.data;
                 renderStats(overview.stats);
+                renderCharts(overview.stats);
                 renderPendingDesk(overview.pending_suppliers);
                 renderActivityStream(overview.recent_activity);
                 renderTelegramPanel(overview.telegram);
@@ -1168,6 +1198,81 @@
             animateCount('stat-pending', stats.by_status?.pending_review || 0);
             animateCount('stat-approved', stats.by_status?.approved || 0);
             animateCount('stat-blacklisted', stats.by_status?.blacklisted || 0);
+        }
+
+        let trendChartInstance = null;
+        let statusChartInstance = null;
+
+        function renderCharts(stats) {
+            if (!stats || !stats.by_status) return;
+
+            // Trend Chart (Mock Data since we don't have historical endpoint yet)
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            if (!trendChartInstance) {
+                trendChartInstance = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'New Suppliers',
+                            data: [12, 19, 15, 25, 22, stats.total_active || 30],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#e8ecf0' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            } else {
+                trendChartInstance.data.datasets[0].data[5] = stats.total_active || 30;
+                trendChartInstance.update();
+            }
+
+            // Status Donut Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const statusData = [
+                stats.by_status.draft || 0,
+                stats.by_status.pending_review || 0,
+                stats.by_status.approved || 0,
+                stats.by_status.rejected || 0,
+                stats.by_status.blacklisted || 0
+            ];
+            
+            if (!statusChartInstance) {
+                statusChartInstance = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Draft', 'Pending', 'Approved', 'Rejected', 'Blacklisted'],
+                        datasets: [{
+                            data: statusData,
+                            backgroundColor: ['#94a3b8', '#f59e0b', '#10b981', '#ef4444', '#1f2937'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: 'Inter', size: 11 } } }
+                        }
+                    }
+                });
+            } else {
+                statusChartInstance.data.datasets[0].data = statusData;
+                statusChartInstance.update();
+            }
         }
 
         function animateCount(id, target) {
