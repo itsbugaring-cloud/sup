@@ -19,6 +19,11 @@ from app.repositories.base import BaseRepository
 class TenantRepository(BaseRepository[Tenant]):
     model = Tenant
 
+    async def get_by_slug(self, slug: str) -> Optional[Tenant]:
+        stmt = select(Tenant).where(Tenant.slug == slug, Tenant.is_active == True)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
 
 class UserRepository(BaseRepository[User]):
     model = User

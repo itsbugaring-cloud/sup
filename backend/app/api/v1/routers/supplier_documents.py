@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, File, Form, Request, UploadFile, status
+from fastapi import APIRouter, File, Form, Request, UploadFile, status, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import get_db_session
 
 from app.core.rate_limit import limiter
 
@@ -25,6 +27,7 @@ from app.core.dependencies import (
     CurrentUser,
     DocRepo,
     SupplierRepo,
+    TenantRepo,
     get_client_ip,
     get_request_id,
 )
@@ -51,6 +54,44 @@ def _get_service(
         minio=MinIOService(),
     )
 
+
+# ── POST /supplier-documents/public/{tenant_slug}/{supplier_id}/upload ────
+@router.post(
+    "/public/{tenant_slug}/{supplier_id}/upload",
+    summary="Public Upload a document for a supplier",
+    status_code=status.HTTP_201_CREATED,
+    response_model=SuccessResponse[SupplierDocumentRead],
+)
+@limiter.limit("20/minute")
+async def upload_document_public(
+    tenant_slug: str,
+    supplier_id: uuid.UUID,
+    request: Request,
+    file: UploadFile = File(...),
+    document_type: DocumentType = Form(...),
+    db: AsyncSession = Depends(get_db_session),
+) -> SuccessResponse[SupplierDocumentRead]:
+    tenant_repo = TenantRepo(db)
+    tenant = await tenant_repo.get_by_slug(tenant_slug)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Company portal not found.")
+        
+    audit_repo = AuditRepo(db, tenant_id=tenant.id)
+    doc_repo = DocRepo(db, tenant_id=tenant.id)
+    supplier_repo = SupplierRepo(db, tenant_id=tenant.id)
+    service = _get_service(supplier_repo, audit_repo, doc_repo)
+
+    doc = await service.upload_document(
+        supplier_id=supplier_id,
+        file=file,
+        document_type=document_type,
+        actor_id=None,
+        actor_type=AuditActorType.SYSTEM,
+        ip_address=get_client_ip(request),
+        user_agent=request.headers.get("user-agent", "unknown"),
+        request_id=get_request_id(request),
+    )
+    return SuccessResponse(data=SupplierDocumentRead.model_validate(doc, from_attributes=True))
 
 # ── POST /supplier-documents/{supplier_id}/upload ─────────────────────────────
 @router.post(

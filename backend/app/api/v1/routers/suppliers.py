@@ -30,10 +30,12 @@ from app.core.dependencies import (
     DbSession,
     DocRepo,
     SupplierRepo,
+    TenantRepo,
     get_client_ip,
     get_request_id,
 )
 from app.models.audit_log import AuditActorType
+from app.core.rate_limit import limiter
 from app.schemas.common import PaginatedResponse, SuccessResponse
 from app.schemas.supplier import (
     SupplierCreate,
@@ -120,6 +122,49 @@ async def list_suppliers(
 
 
 # ── POST /suppliers ───────────────────────────────────────────────────────────
+@router.post(
+    "/public/{tenant_slug}",
+    summary="Public Self-Registration for Suppliers",
+    status_code=status.HTTP_201_CREATED,
+    response_model=SuccessResponse[SupplierRead],
+)
+@limiter.limit("5/minute")
+async def create_supplier_public(
+    tenant_slug: str,
+    request: Request,
+    payload: SupplierCreate,
+    tenant_repo: TenantRepo,
+    db: DbSession,
+) -> SuccessResponse[SupplierRead]:
+    """
+    Public portal endpoint. Creates a supplier in pending_review status.
+    No auth required, relies on tenant_slug and rate limiting.
+    """
+    tenant = await tenant_repo.get_by_slug(tenant_slug)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Company portal not found.")
+        
+    audit_repo = AuditRepo(db, tenant_id=tenant.id)
+    doc_repo = DocRepo(db, tenant_id=tenant.id)
+    supplier_repo = SupplierRepo(db, tenant_id=tenant.id)
+    service = _get_service(supplier_repo, audit_repo, doc_repo)
+
+    supplier = await service.create_supplier(
+        payload=payload,
+        actor_id=None,
+        actor_type=AuditActorType.SYSTEM,
+        ip_address=get_client_ip(request),
+        user_agent=request.headers.get("user-agent", "unknown"),
+        request_id=get_request_id(request),
+    )
+    
+    # Force status to pending review for public registrations
+    supplier.status = "pending_review"
+    await db.commit()
+    await db.refresh(supplier)
+
+    return SuccessResponse(data=SupplierRead.model_validate(supplier, from_attributes=True))
+
 @router.post(
     "",
     summary="Create a new supplier",
